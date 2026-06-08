@@ -1,0 +1,3250 @@
+<!DOCTYPE html>
+<html lang="id">
+<head><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Enjoy Grill — Order Online</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --orange: #FF6B35;
+  --orange-light: #FF8C5A;
+  --orange-dark: #E85520;
+  --cream: #FFF8F0;
+  --warm: #FFF3E6;
+  --text: #2D1B0E;
+  --text-muted: #7A5C4A;
+  --border: rgba(255,107,53,0.2);
+  --shadow: 0 8px 32px rgba(255,107,53,0.15);
+  --radius: 24px;
+  --radius-sm: 16px;
+  --green: #1A7A3C;
+  --green-bg: #E6F7EE;
+  --red: #C0392B;
+  --red-bg: #FFF0EE;
+  --purple: #7C3AED;
+  --purple-bg: #F5F0FF;
+  --purple-border: rgba(124,58,237,0.25);
+
+  /* Safe-area + anchor untuk UI floating (mobile notch) */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --floater-top: 72px;
+  --floater-top-sm: 64px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Poppins',sans-serif; background:var(--cream); color:var(--text); overflow-x:hidden; min-height:100vh; }
+
+/* FLOATERS */
+.floaters { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+.floater { position:absolute; opacity:0.06; animation:float linear infinite; }
+@keyframes float { 0%{transform:translateY(110vh) rotate(0deg)} 100%{transform:translateY(-10vh) rotate(360deg)} }
+
+/* HEADER */
+.header {
+  position:sticky; top:0; z-index:100;
+  background:rgba(255,248,240,0.97); backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:10px 24px;
+  display:flex; align-items:center; gap:12px;
+}
+.logo-wrap { display:flex; align-items:center; gap:10px; flex-shrink:0; cursor:pointer; }
+.logo-wrap:hover .logo-img { box-shadow:0 4px 18px rgba(255,107,53,0.4); transform:scale(1.05); }
+.logo-img{
+  transition:transform 0.2s,box-shadow 0.2s;
+  height:44px;
+  width:auto;
+  max-width:128px;
+  object-fit:contain; /* jaga proporsi logo (tidak kepotong) */
+  border:2px solid rgba(255,107,53,0.3);
+  box-shadow:0 2px 12px rgba(255,107,53,0.2);
+  background:#fff;
+  padding:4px;
+  border-radius:14px;
+  display:block;
+}
+@media(max-width:480px){
+  .logo-img{ height:38px; max-width:112px; padding:3px; border-radius:12px; }
+}
+.logo-text { display:flex; flex-direction:column; line-height:1.1; }
+.logo-brand { font-size:13px; font-weight:900; color:var(--orange); letter-spacing:0.5px; }
+.logo-sub { font-size:9px; font-weight:600; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase; }
+.progress-bar-outer { flex:1; height:6px; background:#F0E8E0; border-radius:100px; overflow:hidden; }
+.progress-bar-fill { height:100%; background:linear-gradient(90deg, var(--orange-dark), var(--orange)); border-radius:100px; transition:width 0.5s cubic-bezier(0.34,1.56,0.64,1); width:0%; }
+.progress-pct { font-size:12px; font-weight:700; color:var(--orange); min-width:34px; text-align:right; }
+
+/* ORDER ID */
+.order-id-badge { display:inline-flex; align-items:center; gap:6px; background:#FFF0E6; border:1.5px solid rgba(255,107,53,0.3); border-radius:100px; padding:4px 12px; font-size:11px; font-weight:700; color:var(--orange-dark); letter-spacing:0.5px; }
+
+/* MAIN */
+.main { max-width:800px; margin:0 auto; padding:24px 16px calc(180px + env(safe-area-inset-bottom, 0px)); position:relative; z-index:1; }
+/* ekstra ruang supaya bottom tabbar tidak nutup konten */
+
+/* STEP INDICATOR */
+.step-indicator { display:flex; align-items:center; justify-content:center; gap:0; margin-bottom:24px; }
+.step-line { width:32px; height:2px; background:#E8DDD5; transition:background 0.4s; flex-shrink:0; }
+.step-line.done { background:var(--orange-dark); }
+.step-dot { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:700; background:white; border:2px solid #E8DDD5; color:var(--text-muted); transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1); cursor:pointer; flex-shrink:0; }
+.step-dot.active { background:var(--orange); border-color:var(--orange); color:white; transform:scale(1.15); box-shadow:0 4px 16px rgba(255,107,53,0.4); }
+.step-dot.done { background:var(--orange-dark); border-color:var(--orange-dark); color:white; }
+.step-dot.locked { opacity:0.4; cursor:not-allowed; }
+.step-labels { display:flex; justify-content:space-between; margin-bottom:20px; }
+.step-lbl { font-size:10px; font-weight:600; color:var(--text-muted); text-align:center; flex:1; transition:color 0.3s; }
+.step-lbl.active { color:var(--orange); }
+.step-lbl.done { color:var(--orange-dark); }
+
+/* SLIDE */
+.slide-viewport { overflow:hidden; border-radius:var(--radius); }
+.slide-track { display:flex; transition:transform 0.5s cubic-bezier(0.77,0,0.175,1); will-change:transform; }
+.slide { min-width:100%; padding:28px; background:white; border-radius:var(--radius); border:1.5px solid var(--border); box-shadow:0 4px 24px rgba(0,0,0,0.05); }
+.slide-step-badge { display:inline-flex; align-items:center; gap:8px; background:var(--warm); border:1.5px solid var(--border); padding:6px 14px; border-radius:100px; font-size:12px; font-weight:700; color:var(--orange); margin-bottom:14px; letter-spacing:1px; text-transform:uppercase; }
+.slide h3 { font-size:1.2rem; font-weight:800; margin-bottom:4px; }
+.slide .subtitle { font-size:13px; color:var(--text-muted); margin-bottom:20px; line-height:1.6; }
+
+.slide-nav { display:flex; gap:12px; margin-top:24px; align-items:center; }
+.btn-prev { padding:14px 20px; border-radius:100px; border:2px solid #E8DDD5; background:white; font-family:'Poppins',sans-serif; font-size:14px; font-weight:700; color:var(--text-muted); cursor:pointer; transition:all 0.2s; }
+.btn-prev:hover { border-color:var(--orange); color:var(--orange); }
+.btn-next { flex:1; padding:15px 24px; border-radius:100px; border:none; background:var(--orange); font-family:'Poppins',sans-serif; font-size:15px; font-weight:800; color:white; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; justify-content:center; gap:10px; box-shadow:0 6px 20px rgba(255,107,53,0.35); }
+.btn-next:hover { background:var(--orange-dark); transform:translateY(-2px); box-shadow:0 10px 28px rgba(255,107,53,0.45); }
+.btn-next:active { transform:scale(0.98); }
+
+/* FORM */
+label { display:block; font-size:13px; font-weight:600; color:var(--text-muted); margin-bottom:6px; }
+input[type="text"],input[type="tel"],input[type="date"],input[type="time"],textarea,select {
+  width:100%; padding:14px 18px; border:1.5px solid #E8DDD5; border-radius:var(--radius-sm);
+  font-family:'Poppins',sans-serif; font-size:14px; color:var(--text); background:var(--cream);
+  outline:none; transition:border-color 0.2s,box-shadow 0.2s; margin-bottom:14px;
+  appearance:none; -webkit-appearance:none;
+}
+input:focus,textarea:focus,select:focus { border-color:var(--orange); box-shadow:0 0 0 4px rgba(255,107,53,0.1); background:white; }
+textarea { min-height:80px; resize:vertical; }
+.date-time-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+@media(max-width:480px){ .date-time-row{grid-template-columns:1fr} }
+.wa-wrap { position:relative; }
+.wa-status { position:absolute; right:16px; top:50%; transform:translateY(-60%); font-size:18px; }
+.success-note { background:var(--green-bg); border:1.5px solid #A3D9B1; border-radius:var(--radius-sm); padding:10px 14px; font-size:12px; color:var(--green); font-weight:600; margin-top:-10px; margin-bottom:14px; display:none; }
+.success-note.show { display:block; }
+
+/* ─── MAPS ─── */
+.map-section { margin-bottom:20px; }
+.map-section-title { font-size:13px; font-weight:700; color:var(--text-muted); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
+.map-embed-wrap {
+  border-radius:var(--radius-sm); overflow:hidden;
+  border:1.5px solid rgba(255,107,53,0.25);
+  box-shadow:0 4px 20px rgba(255,107,53,0.1);
+  position:relative; height:220px;
+  background:#f5f0ea;
+}
+.map-embed-wrap iframe { width:100%; height:100%; border:none; display:block; }
+.map-badge {
+  position:absolute; top:10px; left:10px;
+  background:white; border:1.5px solid rgba(255,107,53,0.3);
+  border-radius:100px; padding:6px 12px;
+  font-size:11px; font-weight:700; color:var(--orange);
+  display:flex; align-items:center; gap:5px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.1);
+  pointer-events:none;
+}
+.map-open-btn {
+  display:flex; align-items:center; gap:8px;
+  background:var(--orange); color:white;
+  border:none; border-radius:100px;
+  padding:10px 18px; margin-top:10px;
+  font-family:'Poppins',sans-serif; font-size:13px; font-weight:700;
+  cursor:pointer; transition:all 0.2s;
+  box-shadow:0 4px 14px rgba(255,107,53,0.3);
+}
+.map-open-btn:hover { background:var(--orange-dark); transform:translateY(-1px); }
+
+/* ─── PAKET CARDS ─── */
+.paket-tabs { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.paket-tab { padding:8px 18px; border-radius:100px; border:2px solid #E8DDD5; background:white; font-family:'Poppins',sans-serif; font-size:13px; font-weight:700; color:var(--text-muted); cursor:pointer; transition:all 0.2s; }
+.paket-tab.active { background:var(--orange); border-color:var(--orange); color:white; }
+
+.paket-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+@media(max-width:500px){ .paket-grid{grid-template-columns:1fr} }
+
+.paket-card {
+  border:2px solid #E8DDD5; border-radius:var(--radius-sm);
+  background:var(--cream); cursor:pointer;
+  transition:all 0.25s; overflow:hidden; position:relative;
+}
+.paket-card:hover { border-color:var(--orange-light); transform:translateY(-3px); box-shadow:0 8px 24px rgba(255,107,53,0.15); }
+.paket-card.selected { border-color:var(--orange); background:var(--warm); box-shadow:0 8px 24px rgba(255,107,53,0.2); }
+.paket-card-header {
+  padding:14px 14px 10px;
+  background:linear-gradient(135deg,#2D1B0E,#4A2D1A);
+  color:white; position:relative;
+}
+.paket-card.grill-type .paket-card-header { background:linear-gradient(135deg,#2D1B0E,#3D2010); }
+.paket-card.shabu-type .paket-card-header { background:linear-gradient(135deg,#0E1B2D,#102040); }
+.paket-badge { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; opacity:0.7; margin-bottom:4px; }
+.paket-name { font-size:1rem; font-weight:900; line-height:1.2; }
+.paket-price { font-size:1.3rem; font-weight:900; color:var(--orange); margin-top:6px; }
+.paket-check { position:absolute; top:10px; right:10px; width:24px; height:24px; border-radius:50%; background:var(--orange); display:none; align-items:center; justify-content:center; font-size:12px; }
+.paket-card.selected .paket-check { display:flex; }
+
+.paket-card-body { padding:12px 14px; }
+.paket-item { display:flex; align-items:flex-start; gap:6px; font-size:11.5px; color:var(--text-muted); margin-bottom:4px; line-height:1.4; }
+.paket-item-dot { width:5px; height:5px; border-radius:50%; background:var(--orange); flex-shrink:0; margin-top:4px; }
+.paket-item strong { color:var(--text); }
+.paket-popular { position:absolute; top:10px; right:10px; background:var(--orange); color:white; font-size:9px; font-weight:700; padding:3px 8px; border-radius:100px; letter-spacing:0.5px; }
+
+/* ALAT MANUAL */
+.section-divider { display:flex; align-items:center; gap:10px; margin:20px 0 16px; }
+.section-divider span { font-size:12px; font-weight:700; color:var(--text-muted); white-space:nowrap; }
+.section-divider::before,.section-divider::after { content:''; flex:1; height:1px; background:#E8DDD5; }
+
+.product-row { display:flex; align-items:center; gap:14px; padding:14px; border-radius:var(--radius-sm); border:1.5px solid #F0E8E0; background:var(--cream); margin-bottom:10px; transition:border-color 0.2s,background 0.2s,transform 0.2s; }
+.product-info { flex:1; min-width:0; }
+.product-row:hover { transform:translateX(3px); }
+.product-row.active { border-color:var(--orange); background:var(--warm); }
+.product-emoji { font-size:1.8rem; flex-shrink:0; }
+.product-info { flex:1; min-width:0; }
+.product-name { font-weight:700; font-size:14px; }
+.product-desc { font-size:12px; color:var(--text-muted); line-height:1.5; margin-top:1px; }
+.product-price { font-size:13px; font-weight:700; color:var(--orange); margin-top:2px; }
+.qty-control { display:flex; align-items:center; background:white; border:1.5px solid #E8DDD5; border-radius:100px; overflow:hidden; flex-shrink:0; }
+.qty-btn { width:34px; height:34px; background:none; border:none; font-size:17px; font-weight:700; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:color 0.2s,background 0.2s; font-family:'Poppins',sans-serif; }
+.qty-btn:hover { color:var(--orange); background:var(--warm); }
+.qty-num { min-width:32px; text-align:center; font-size:14px; font-weight:700; color:var(--text); }
+.qty-btn { width:34px; height:34px; background:none; border:none; font-size:17px; font-weight:700; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:color 0.2s,background 0.2s; font-family:'Poppins',sans-serif; }
+.qty-btn:hover { color:var(--orange); background:var(--warm); }
+.qty-num { min-width:32px; text-align:center; font-size:14px; font-weight:700; color:var(--text); }
+
+.porsi-hint { display:none; background:#E6F7EE; border:1.5px solid #A3D9B1; border-radius:var(--radius-sm); padding:10px 14px; font-size:12px; color:var(--green); font-weight:600; margin-bottom:12px; line-height:1.6; }
+.porsi-hint.show { display:block; }
+
+/* Tombol hapus kecil di baris alat (custom) */
+.row-remove-btn{margin-left:10px;border:none;background:rgba(0,0,0,.06);color:rgba(0,0,0,.65);border-radius:999px;padding:8px 12px;font-size:12px;font-weight:900;cursor:pointer;flex-shrink:0;
+  opacity:0;transform:translateY(4px) scale(.98);pointer-events:none;transition:opacity .16s ease, transform .16s ease, background .16s ease, color .16s ease;}
+.row-remove-btn.show{opacity:1;transform:translateY(0) scale(1);pointer-events:auto;}
+.row-remove-btn:hover{background:rgba(255,106,0,.12);color:var(--orange-dark);}
+@media(max-width:420px){.row-remove-btn{padding:7px 10px;font-size:11px;}}
+
+/* Estimasi porsi paket + add-ons (UI lucu) */
+.porsi-est { display:none; background:linear-gradient(135deg,#FFF8F0,#E6F7EE); border:1.5px solid rgba(255,107,53,0.25); border-radius:var(--radius-sm); padding:12px 14px; margin:12px 0 14px; }
+.porsi-est.show { display:block; }
+#porsiPaketBox,#porsiBahanBox{display:none !important;}
+
+
+/* Floating tracker biar tetap kelihatan saat scroll */
+.porsi-float{position:fixed;right:14px;top:auto;bottom:calc(78px + env(safe-area-inset-bottom, 0px));z-index:9998;display:none;}
+.porsi-float.show{display:block;}
+.porsi-float .porsi-est{display:block;margin:0;min-width:220px;}
+@media(max-width:420px){.porsi-float{right:10px;top:auto;bottom:calc(78px + env(safe-area-inset-bottom, 0px));}.porsi-float .porsi-est{min-width:200px;}}
+/* Hindari bentrok dengan floating cart */
+.porsi-float.raise{bottom:calc(140px + env(safe-area-inset-bottom, 0px));}
+.porsi-est-row{display:flex;align-items:flex-start;gap:10px;}
+.porsi-est-ico{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:white;border:1px solid rgba(0,0,0,.06);box-shadow:0 6px 16px rgba(0,0,0,.08);font-size:18px;flex-shrink:0;}
+.porsi-est-title{font-size:12px;font-weight:900;color:var(--text);line-height:1.2;}
+.porsi-est-sub{font-size:11px;color:var(--text-muted);margin-top:3px;line-height:1.45;}
+.porsi-est-pill{display:inline-flex;align-items:center;gap:6px;background:white;border:1px solid rgba(0,0,0,.06);border-radius:999px;padding:5px 10px;margin-top:8px;font-size:11px;font-weight:800;color:var(--orange-dark);box-shadow:0 6px 14px rgba(0,0,0,.06);} 
+.porsi-est-pill b{color:var(--text);} 
+.porsi-bounce{animation:porsiBounce .25s ease-out;}
+@keyframes porsiBounce{0%{transform:scale(1);}50%{transform:scale(1.06);}100%{transform:scale(1);}}
+
+.pax-badge{position:absolute;right:12px;top:12px;left:auto;background:rgba(255,255,255,.85);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,107,53,0.22);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:900;color:var(--orange-dark);display:inline-flex;align-items:center;gap:6px;}
+.pax-badge span{opacity:.9;font-weight:800;color:var(--text-muted);}
+
+/* ─── BAHAN CARDS ─── */
+.prod-section-hdr { font-weight:700; font-size:12px; color:var(--text-muted); margin:18px 0 8px; text-transform:uppercase; letter-spacing:1px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.mandatory { color:#E24B4A; font-size:11px; font-weight:700; margin-left:4px; }
+
+.bahan-card {
+  border:1.5px solid #F0E8E0; border-radius:var(--radius-sm); background:var(--cream);
+  margin-bottom:10px; overflow:hidden; transition:border-color 0.2s,background 0.2s;
+}
+.bahan-card.active { border-color:var(--orange); background:var(--warm); }
+.bahan-card-top { display:flex; align-items:center; gap:14px; padding:14px; }
+.bahan-qty { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+.bahan-emoji { font-size:1.8rem; flex-shrink:0; }
+.bahan-info { flex:1; min-width:0; }
+.bahan-name { font-weight:700; font-size:13.5px; }
+.bahan-tagline { font-size:11px; color:var(--orange); font-weight:600; margin-top:1px; }
+.bahan-price { font-size:13px; font-weight:700; color:var(--orange); margin-top:2px; }
+.bahan-qty { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+
+/* Expand detail */
+.bahan-detail-toggle {
+  width:100%; padding:8px 14px; background:none; border:none; border-top:1px solid #F0E8E0;
+  display:flex; align-items:center; gap:6px; cursor:pointer;
+  font-family:'Poppins',sans-serif; font-size:11px; font-weight:700; color:var(--text-muted);
+  transition:background 0.2s; text-align:left;
+}
+.bahan-detail-toggle:hover { background:rgba(255,107,53,0.05); color:var(--orange); }
+.bahan-detail-toggle .arrow { transition:transform 0.3s; display:inline-block; }
+.bahan-detail-toggle.open .arrow { transform:rotate(180deg); }
+
+.bahan-detail-body {
+  max-height:0; overflow:hidden; transition:max-height 0.4s ease;
+  padding:0 14px; background:rgba(255,248,240,0.5);
+}
+.bahan-detail-body.open { max-height:300px; padding:12px 14px; }
+.bahan-detail-row { display:flex; gap:8px; margin-bottom:8px; }
+.bahan-detail-icon { font-size:1.1rem; flex-shrink:0; }
+
+.bahan-photo{width:46px;height:46px;border-radius:12px;object-fit:cover;flex-shrink:0;box-shadow:0 6px 16px rgba(0,0,0,.12);border:1px solid rgba(0,0,0,.06)}
+.product-photo{width:44px;height:44px;border-radius:14px;object-fit:cover;flex-shrink:0;box-shadow:0 8px 18px rgba(0,0,0,.14);border:1px solid rgba(0,0,0,.06)}
+.detail-photo{width:22px;height:22px;border-radius:7px;object-fit:cover;flex-shrink:0;box-shadow:0 4px 10px rgba(0,0,0,.12);border:1px solid rgba(0,0,0,.06)}
+.icon-photo{width:22px;height:22px;border-radius:7px;object-fit:cover;vertical-align:-4px;margin-right:6px;box-shadow:0 4px 10px rgba(0,0,0,.10);border:1px solid rgba(0,0,0,.06)}
+
+.bahan-detail-text { font-size:12px; color:var(--text-muted); line-height:1.6; }
+.bahan-detail-text strong { color:var(--text); }
+.bahan-grade-tag { display:inline-block; padding:2px 8px; border-radius:100px; font-size:10px; font-weight:700; margin-bottom:6px; }
+.grade-premium { background:#FFF3E6; color:var(--orange-dark); border:1px solid rgba(255,107,53,0.3); }
+.grade-standard { background:#E6F7EE; color:var(--green); border:1px solid rgba(26,122,60,0.3); }
+.grade-import { background:#EEF2FF; color:#3730A3; border:1px solid rgba(55,48,163,0.3); }
+
+.lock-badge { display:inline-flex; align-items:center; gap:4px; background:var(--red-bg); border:1.5px solid #FFCFC7; color:var(--red); padding:3px 10px; border-radius:100px; font-size:11px; font-weight:700; }
+.shabu-only-tag { display:inline-flex; align-items:center; gap:5px; background:#E8F4FD; border:1px solid #B3D8F0; color:#1A6FA3; padding:3px 10px; border-radius:100px; font-size:11px; font-weight:700; }
+
+/* SLOT */
+.slot-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+@media(max-width:400px){.slot-grid{grid-template-columns:repeat(2,1fr);}}
+.slot-btn { padding:10px 6px; border-radius:12px; border:1.5px solid #E8DDD5; background:var(--cream); font-family:'Poppins',sans-serif; font-size:13px; font-weight:600; color:var(--text-muted); cursor:pointer; transition:all 0.2s; text-align:center; }
+.slot-btn:hover:not(.disabled) { border-color:var(--orange-light); color:var(--orange); background:var(--warm); }
+.slot-btn.selected { border-color:var(--orange); background:var(--orange); color:white; }
+.slot-btn.disabled { opacity:0.4; cursor:not-allowed; text-decoration:line-through; }
+.slot-time { font-size:15px; font-weight:800; display:block; }
+.slot-avail { font-size:10px; margin-top:1px; display:block; }
+
+/* PAYMENT */
+.payment-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+@media(max-width:480px){ .payment-grid{grid-template-columns:1fr} }
+.payment-option { border:2px solid #E8DDD5; border-radius:var(--radius-sm); padding:18px; cursor:pointer; text-align:center; transition:all 0.25s; background:var(--cream); }
+.payment-option:hover { border-color:var(--orange-light); background:var(--warm); transform:translateY(-3px); }
+.payment-option.selected { border-color:var(--orange); background:var(--warm); transform:translateY(-3px); box-shadow:0 8px 20px rgba(255,107,53,0.2); }
+.payment-option.selected .pay-name { color:var(--orange); }
+.pay-icon { font-size:2rem; margin-bottom:6px; }
+.pay-name { font-weight:700; font-size:14px; }
+.pay-desc { font-size:11px; color:var(--text-muted); margin-top:3px; }
+
+/* VOUCHER */
+.voucher-section { margin-bottom:20px; }
+.voucher-label { font-size:13px; font-weight:700; color:var(--text-muted); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+.voucher-wrap { display:flex; gap:8px; align-items:stretch; }
+.voucher-input-box { position:relative; flex:1; }
+.voucher-input { width:100%; padding:12px 16px; border:2px solid var(--purple-border); border-radius:var(--radius-sm); font-family:'Poppins',sans-serif; font-size:14px; font-weight:700; color:var(--purple); background:var(--purple-bg); outline:none; transition:all 0.2s; letter-spacing:1px; text-transform:uppercase; margin-bottom:0; }
+.voucher-input::placeholder { color:#C4B5FD; font-weight:500; letter-spacing:0; text-transform:none; }
+.voucher-input:focus { border-color:var(--purple); box-shadow:0 0 0 4px rgba(124,58,237,0.1); }
+.voucher-input.valid { border-color:#1A7A3C; background:var(--green-bg); color:var(--green); }
+.voucher-input.invalid { border-color:var(--red); background:var(--red-bg); color:var(--red); }
+.voucher-btn { padding:12px 20px; border-radius:var(--radius-sm); border:none; background:var(--purple); font-family:'Poppins',sans-serif; font-size:13px; font-weight:700; color:white; cursor:pointer; transition:all 0.2s; white-space:nowrap; flex-shrink:0; }
+.voucher-btn:hover { background:#6D28D9; transform:translateY(-1px); }
+.voucher-feedback { margin-top:8px; font-size:12px; font-weight:600; display:none; padding:8px 12px; border-radius:10px; }
+.voucher-feedback.show { display:flex; align-items:center; gap:6px; }
+.voucher-feedback.success { background:var(--green-bg); color:var(--green); border:1.5px solid #A3D9B1; }
+.voucher-feedback.error { background:var(--red-bg); color:var(--red); border:1.5px solid #FFCFC7; }
+.voucher-applied-chip { display:none; align-items:center; gap:8px; background:linear-gradient(135deg,#7C3AED15,#1A7A3C15); border:1.5px solid #7C3AED30; border-radius:100px; padding:6px 14px; font-size:12px; font-weight:700; color:var(--purple); margin-top:8px; }
+.voucher-applied-chip.show { display:inline-flex; }
+.voucher-remove { background:none; border:none; cursor:pointer; font-size:14px; color:var(--red); padding:0; margin-left:4px; }
+
+/* DP BOX */
+.dp-info-box { background:linear-gradient(135deg,#FFF3E6,#FFF8F0); border:1.5px solid rgba(255,107,53,0.25); border-radius:var(--radius-sm); padding:14px 16px; margin-bottom:14px; display:none; }
+.dp-info-box.show { display:block; }
+.dp-row { display:flex; justify-content:space-between; align-items:center; font-size:13px; margin-bottom:6px; }
+.dp-row:last-child { margin:0; padding-top:8px; border-top:1px dashed rgba(255,107,53,0.3); }
+.dp-label { color:var(--text-muted); }
+.dp-value { font-weight:700; color:var(--text); }
+.dp-value.highlight { color:var(--orange); font-size:15px; }
+
+/* SUMMARY */
+.summary-card { background:linear-gradient(135deg,#1A0A00 0%,#3D1500 100%); border-radius:var(--radius); padding:24px; color:white; margin-bottom:20px; position:relative; overflow:hidden; }
+.summary-card::before { content:'🔥'; position:absolute; font-size:10rem; opacity:0.04; right:-1.5rem; top:-2rem; }
+.summary-title { font-size:1rem; font-weight:700; margin-bottom:16px; opacity:0.9; display:flex; align-items:center; justify-content:space-between; }
+.order-id-chip { font-size:11px; font-weight:700; background:rgba(255,107,53,0.25); padding:4px 10px; border-radius:100px; color:var(--orange-light); letter-spacing:0.5px; }
+.summary-row { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.08); font-size:13px; }
+.summary-row:last-child { border:none; }
+.summary-label { opacity:0.7; }
+.summary-value { font-weight:600; }
+.summary-total { display:flex; justify-content:space-between; align-items:center; padding-top:14px; margin-top:6px; border-top:2px solid rgba(255,107,53,0.4); }
+.total-label { font-weight:700; font-size:0.95rem; }
+.total-value { font-size:1.5rem; font-weight:900; color:var(--orange); }
+
+/* CTA */
+.cta-btn { width:100%; padding:18px 32px; background:var(--orange); color:white; border:none; border-radius:100px; font-family:'Poppins',sans-serif; font-size:1.1rem; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:12px; transition:transform 0.2s,background 0.2s,box-shadow 0.2s; box-shadow:0 8px 24px rgba(255,107,53,0.4); }
+.cta-btn:hover { background:var(--orange-dark); transform:scale(1.02); box-shadow:0 12px 32px rgba(255,107,53,0.5); }
+.cta-btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+
+.btn-reset { display:flex; align-items:center; gap:6px; background:none; border:1.5px solid #E8DDD5; border-radius:100px; padding:8px 16px; font-family:'Poppins',sans-serif; font-size:12px; font-weight:600; color:var(--text-muted); cursor:pointer; transition:all 0.2s; }
+.btn-reset:hover { border-color:var(--red); color:var(--red); }
+
+.note-box { background:#FFF3E6; border:1.5px solid rgba(255,107,53,0.25); border-radius:var(--radius-sm); padding:12px 16px; font-size:13px; color:var(--text-muted); margin-top:10px; line-height:1.6; }
+.note-box strong { color:var(--orange); }
+.note-box a { color:var(--orange); text-decoration:none; }
+
+/* TOAST (dipakai untuk validasi) */
+.toast { position:fixed; bottom:calc(92px + env(safe-area-inset-bottom, 0px)); left:50%; transform:translateX(-50%) translateY(100px); background:#111827; color:white; padding:12px 18px; border-radius:999px; font-size:13px; font-weight:800; z-index:10001; transition:transform 0.25s ease; white-space:nowrap; pointer-events:none; max-width:92vw; text-align:center; box-shadow:0 12px 28px rgba(0,0,0,.22); }
+.toast.show { transform:translateX(-50%) translateY(0); }
+@media (min-width: 900px){ .toast{ bottom:32px; } }
+
+/* Highlight area yang wajib dipilih */
+.need-checkout{outline:2.5px solid #DC2626 !important; box-shadow:0 12px 28px rgba(220,38,38,.18) !important; animation:needPulse 1.05s ease-in-out infinite; }
+@keyframes needPulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+
+/* MODAL */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9000; display:none; align-items:center; justify-content:center; padding:20px; }
+.modal-overlay.show { display:flex; }
+.modal-box { background:white; border-radius:var(--radius); padding:28px; max-width:400px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+.modal-title { font-size:1.1rem; font-weight:800; margin-bottom:8px; }
+.modal-body { font-size:13px; color:var(--text-muted); line-height:1.7; margin-bottom:20px; }
+.modal-btns { display:flex; gap:10px; }
+.modal-btn-cancel { flex:1; padding:12px; border-radius:100px; border:2px solid #E8DDD5; background:white; font-family:'Poppins',sans-serif; font-size:14px; font-weight:700; color:var(--text-muted); cursor:pointer; }
+.modal-btn-confirm { flex:1; padding:12px; border-radius:100px; border:none; background:var(--red); font-family:'Poppins',sans-serif; font-size:14px; font-weight:700; color:white; cursor:pointer; }
+
+/* CONFETTI */
+.confetti-piece { position:fixed; pointer-events:none; z-index:9999; animation:confetti-fall 3s forwards; }
+@keyframes confetti-fall { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(100vh) rotate(720deg);opacity:0} }
+
+/* DRAFT NOTICE */
+.draft-notice { display:none; align-items:center; gap:8px; background:#E8F4FD; border:1.5px solid #B3D8F0; border-radius:var(--radius-sm); padding:10px 14px; font-size:12px; color:#1A6FA3; font-weight:600; margin-bottom:14px; }
+.draft-notice.show { display:flex; }
+
+/* SELECTED SUMMARY CHIP (for step 1 to carry forward) */
+.selected-paket-chip {
+  display:none; align-items:center; gap:8px;
+  background:linear-gradient(135deg,var(--orange),var(--orange-dark));
+  border-radius:var(--radius-sm); padding:10px 16px;
+  font-size:13px; font-weight:700; color:white;
+  margin-bottom:14px; flex-wrap:wrap;
+}
+.selected-paket-chip.show { display:flex; }
+
+/* MODE SELECTOR */
+.mode-selector { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+.mode-btn {
+  padding:16px; border-radius:var(--radius-sm); border:2px solid #E8DDD5;
+  background:var(--cream); cursor:pointer; text-align:center;
+  transition:all 0.25s; font-family:'Poppins',sans-serif;
+}
+.mode-btn:hover { border-color:var(--orange-light); background:var(--warm); transform:translateY(-2px); }
+.mode-btn.active { border-color:var(--orange); background:var(--warm); }
+.mode-btn-icon { font-size:2rem; margin-bottom:6px; }
+.mode-btn-name { font-size:13px; font-weight:700; color:var(--text); }
+.mode-btn-desc { font-size:11px; color:var(--text-muted); margin-top:2px; }
+
+
+/* ─── ENHANCEMENTS (Mobile + Copy) ───────────────────────── */
+.brand-logo{width:40px;height:40px;object-fit:contain;border-radius:999px;background:transparent;padding:4px;border:2px solid rgba(255,255,255,.28);box-shadow:none;}
+.copy-btn{margin-left:10px;padding:8px 12px;border-radius:12px;border:1.5px solid rgba(255,106,0,.25);background:#fff;font-family:'Poppins',sans-serif;font-size:12px;font-weight:800;color:var(--orange-dark);cursor:pointer;transition:transform .12s ease, box-shadow .12s ease;}
+.copy-btn:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(0,0,0,.08);}
+.copy-btn:active{transform:translateY(0);box-shadow:none;}
+.copy-btn-ghost{margin-top:10px;margin-left:0;width:100%;}
+
+@media (max-width: 768px){
+  .header{gap:10px;}
+  .logo-text .logo-sub{display:none;}
+  .progress-pct{min-width:42px;}
+  .main{padding:14px;}
+  .slide{padding:16px;}
+  h3{font-size:18px;}
+  .subtitle{font-size:13px;}
+  .map-embed-wrap{height:220px;}
+}
+@media (max-width: 420px){
+  .brand-logo{width:38px;height:38px;}
+  .logo-brand{font-size:13px;}
+  .order-id-badge{max-width:62vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+}
+
+
+/* ─── MANDATORY VS OPTIONAL STYLES ───────────────────── */
+.prod-section-hdr.mandatory-hdr{background:rgba(255,106,0,.10);color:var(--orange-dark);padding:10px 12px;border-radius:14px;border:1px solid rgba(255,106,0,.18);} 
+.prod-section-hdr.premium-hdr{background:rgba(124,58,237,.10);color:#4C1D95;padding:10px 12px;border-radius:14px;border:1px solid rgba(124,58,237,.20);} 
+.optional-chip{margin-left:auto;font-size:11px;font-weight:900;color:#4C1D95;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.18);padding:5px 10px;border-radius:999px;}
+.bahan-card.premium-item{border-color:rgba(124,58,237,.25);}
+.steam-notice{margin:-2px 0 14px;padding:10px 12px;border-radius:14px;background:rgba(59,130,246,.10);border:1px solid rgba(59,130,246,.18);color:#1E3A8A;font-size:12.5px;font-weight:700;line-height:1.45;}
+
+/* ─── COMPACT MOBILE REFINEMENT ─────────────────────────── */
+/* Saat mode paket: sembunyikan semua label wajib & ketentuan add-ons */
+.mode-paket .mandatory,
+.mode-paket #steam-mandatory,
+.mode-paket #beef-mandatory,
+.mode-paket #chicken-mandatory,
+.mode-paket #sosis-mandatory,
+.mode-paket #sayur-mandatory,
+.mode-paket #saus-mandatory,
+.mode-paket .shabu-only-tag,
+.mode-paket #paketModeNote{display:none !important;}
+
+.eg-compact{--fs-base:14px;--fs-sm:12px;--fs-xs:11px;}
+
+.sec-details{border:1px solid rgba(255,106,0,.12);border-radius:16px;background:rgba(255,255,255,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);overflow:hidden;margin:14px 0;}
+.sec-summary{list-style:none;cursor:pointer;padding:12px 14px;font-weight:900;color:var(--orange-dark);display:flex;align-items:center;gap:10px;}
+.sec-details[open] .sec-summary{border-bottom:1px solid rgba(255,106,0,.10);}
+.sec-summary::-webkit-details-marker{display:none;}
+.sec-summary:after{content:'Lihat';margin-left:auto;font-size:11px;font-weight:900;color:rgba(255,106,0,.75);padding:6px 10px;border-radius:999px;background:rgba(255,106,0,.08);}
+.sec-details[open] .sec-summary:after{content:'Tutup';}
+.sec-details .sec-body{padding:0 14px 14px;}
+
+@media (max-width: 768px){
+  .header{padding:12px 14px;}
+  .main{padding:12px;}
+  .slide{padding:14px;}
+  h3{font-size:18px;line-height:1.2;margin-bottom:10px;}
+  .subtitle{font-size:12.5px;line-height:1.55;margin-bottom:12px;}
+  label{font-size:12.5px;}
+  input, textarea{font-size:14px;}
+  .paket-card{padding:14px;}
+  .payment-option{padding:14px;}
+  .summary-card{padding:14px;}
+  .slide-nav{gap:10px;}
+  .btn-prev,.btn-next{padding:12px 14px;font-size:13px;}
+  .cta-btn{padding:14px 14px;font-size:14px;}
+  .map-embed-wrap{height:210px;}
+  .secondary{display:none !important;}
+}
+@media (max-width: 420px){
+  .logo-brand{font-size:12.5px;letter-spacing:.6px;}
+  .progress-bar-outer{height:7px;}
+  .progress-pct{font-size:11px;}
+}
+
+
+/* ─── BOTTOM TABBAR + CART SHEET (marketplace style) ─────── */
+.bottom-tabbar{position:fixed;left:0;right:0;bottom:0;z-index:10000;padding:10px 12px calc(10px + env(safe-area-inset-bottom, 0px));background:rgba(255,248,240,0.96);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid rgba(0,0,0,.06);}
+.bottom-tabbar-inner{max-width:820px;margin:0 auto;display:flex;gap:10px;align-items:center;}
+.bottom-tabbar-inner .tab-btn{flex:1;}
+
+/* Porsi sheet */
+.porsi-sheet{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom, 0px));z-index:9999;display:none;justify-content:center;pointer-events:auto;}
+.porsi-sheet.open{display:flex;}
+.porsi-sheet-card{width:min(620px,100vw);margin:0 12px;border-radius:22px 22px 18px 18px;overflow:hidden;background:rgba(255,255,255,.78);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,106,0,.14);box-shadow:0 18px 55px rgba(0,0,0,.18);max-height:60vh;}
+.porsi-sheet-head{display:flex;align-items:center;gap:10px;padding:14px 14px;background:linear-gradient(135deg, rgba(26,122,60,.10), rgba(255,106,0,.06));}
+.porsi-title{font-weight:900;color:rgba(0,0,0,.78);}
+.porsi-close{margin-left:auto;border:none;background:white;border-radius:999px;padding:6px 10px;font-weight:900;cursor:pointer;border:1px solid rgba(0,0,0,.08);}
+.porsi-close:active{transform:scale(.98)}
+.porsi-sheet-body{padding:14px;overflow:auto;max-height:calc(60vh - 56px);}
+.tab-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;border:none;border-radius:16px;padding:12px 14px;font-family:'Poppins',sans-serif;font-weight:900;cursor:pointer;touch-action:manipulation;background:white;border:1px solid rgba(255,106,0,.18);box-shadow:0 10px 24px rgba(0,0,0,.10);} 
+.tab-btn.tab-next{flex:1.15;background:var(--orange);color:white;border:none;box-shadow:0 14px 30px rgba(255,107,53,.30);position:relative;} 
+.tab-btn.tab-next .tab-title{color:rgba(255,255,255,.92);} 
+.tab-btn.tab-next .tab-sub{color:white;}
+
+/* Warning tepat di atas tombol Lanjut */
+.next-warn{position:absolute;left:0;right:0;top:-34px;margin:0 auto;width:max-content;max-width:96%;padding:8px 12px;border-radius:999px;background:rgba(17,24,39,.92);color:white;font-size:12px;font-weight:800;letter-spacing:.2px;box-shadow:0 10px 26px rgba(0,0,0,.22);opacity:0;transform:translateY(6px);transition:opacity .18s ease, transform .18s ease;pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.next-warn.show{opacity:1;transform:translateY(0);}
+.tab-btn:active{transform:scale(.99)}
+.tab-btn .tab-ico{font-size:18px;line-height:1}
+.tab-btn .tab-text{display:flex;flex-direction:column;line-height:1.15;align-items:flex-start}
+.tab-btn .tab-title{font-size:12px;color:rgba(0,0,0,.72)}
+.tab-btn .tab-sub{font-size:12px;color:var(--orange);font-weight:900}
+
+.cart-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);z-index:9998;display:none;}
+.cart-backdrop.show{display:block;}
+
+.floating-cart{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom, 0px));z-index:9999;display:none;justify-content:center;pointer-events:auto;}
+.floating-cart.open{display:flex;}
+.floating-cart-card{width:min(640px,100vw);margin:0 10px;border-radius:22px 22px 18px 18px;overflow:hidden;background:rgba(255,255,255,.78);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(255,106,0,.16);box-shadow:0 18px 55px rgba(0,0,0,.20);max-height:78vh;}
+.floating-cart-head{width:100%;display:flex;align-items:center;gap:10px;padding:14px 14px;border:none;background:linear-gradient(135deg, rgba(255,106,0,.12), rgba(255,106,0,.04));font-family:'Poppins',sans-serif;}
+.floating-cart-head .fc-title{display:inline-flex;align-items:center;gap:8px;}
+.floating-cart-head .fc-total{margin-left:auto;}
+.fc-title{font-weight:900;color:var(--orange-dark);}
+.fc-total{margin-left:auto;font-weight:900;color:var(--orange);}
+.fc-close{border:none;background:white;border-radius:999px;padding:6px 10px;font-weight:900;cursor:pointer;border:1px solid rgba(0,0,0,.08);}
+.fc-close:active{transform:scale(.98)}
+.floating-cart-body{padding:0 12px 12px;overflow:auto;max-height:calc(78vh - 54px);}
+
+@media (max-width: 768px){
+  .floating-cart{bottom:calc(64px + env(safe-area-inset-bottom, 0px));}
+  .floating-cart-card{margin:0 10px;max-height:66vh;}
+  .floating-cart-body{max-height:calc(66vh - 58px);}
+  .fc-actions{grid-template-columns:1fr;}
+}
+.fc-items{max-height:54vh;overflow:auto;padding-top:8px;}
+.fc-row{display:flex;gap:8px;padding:8px 0;border-bottom:1px dashed rgba(0,0,0,.08);font-size:12px;}
+.fc-left{font-weight:800;color:var(--text);}
+.fc-right{font-weight:900;color:var(--orange-dark);}
+/* grid biar tombol +/- selalu sejajar dan lebar konsisten */
+.fc-row-wrap{display:grid;grid-template-columns: 1fr 86px auto auto;align-items:center;gap:10px;}
+.fc-left{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fc-right{width:86px;text-align:right;white-space:nowrap;}
+.fc-ctrl{display:grid;grid-template-columns:28px 24px 28px;align-items:center;gap:6px;}
+.fc-qty-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:10px;}
+.fc-qty-num{width:24px;text-align:center;font-weight:900;color:var(--text);} 
+.fc-remove{height:28px;padding:0 10px;border-radius:10px;}
+@media(max-width:420px){
+  .fc-row-wrap{grid-template-columns: 1fr 76px auto auto;gap:8px;}
+  .fc-right{width:76px;}
+  .fc-ctrl{grid-template-columns:26px 22px 26px;gap:5px;}
+  .fc-qty-btn{width:26px;height:26px;}
+  .fc-qty-num{width:22px;}
+  .fc-remove{height:26px;padding:0 8px;}
+}
+/* rapikan section title */
+.fc-section-title{font-size:12px;font-weight:900;letter-spacing:.4px;color:rgba(0,0,0,.72);margin:10px 0 6px;}
+.fc-row:last-child{border-bottom:none;}
+.fc-left{font-weight:800;color:rgba(0,0,0,.78);min-width:0;}
+.fc-right{color:rgba(0,0,0,.78);font-weight:900;white-space:nowrap;}
+.fc-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;}
+
+.live-pill{margin-left:10px;font-size:11px;font-weight:900;color:#10B981;background:rgba(16,185,129,.10);border:1px solid rgba(16,185,129,.20);padding:6px 10px;border-radius:999px;white-space:nowrap;}
+.live-pill.pulse{animation:pulseLive 1.6s ease-in-out infinite;}
+@keyframes pulseLive{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.04);opacity:.85}}
+
+@media (max-width: 768px){
+  .floating-cart{right:12px;top:calc(var(--safe-top) + var(--floater-top-sm));bottom:auto;max-height:66vh;}
+  .floating-cart-body{max-height:calc(66vh - 48px);}
+  .fc-items{max-height:32vh;}
+  .fc-actions{grid-template-columns:1fr;}
+}
+
+
+/* ─── PAKET QTY UI ───────────────────────────────────────── */
+/* Buat kontrol qty tidak menutupi konten kartu */
+.paket-card{position:relative;display:flex;flex-direction:column;gap:10px;}
+.paket-qty-ui{position:static;margin-top:auto;align-self:flex-end;display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,106,0,.18);border-radius:999px;padding:6px 8px;}
+.qty-mini{width:28px;height:28px;border-radius:999px;border:none;background:rgba(255,106,0,.10);color:var(--orange-dark);font-weight:900;font-family:'Poppins',sans-serif;cursor:pointer;}
+.qty-mini:active{transform:scale(.98)}
+.qty-mini-num{min-width:16px;text-align:center;font-weight:900;color:rgba(0,0,0,.75);font-size:12px;}
+@media (max-width: 768px){
+  .paket-card{gap:8px;}
+}
+
+
+/* ─── FLOATING CART (PAKET SUMMARY) ─────────────────────── */
+.fc-qty-btn{border:none;background:rgba(255,106,0,.10);color:var(--orange-dark);border-radius:10px;padding:0;font-size:13px;font-weight:900;cursor:pointer;}
+.fc-qty-btn:hover{background:rgba(255,106,0,.16);}
+.fc-qty-num{text-align:center;font-weight:900;color:rgba(0,0,0,.72);}
+
+.fc-section{padding-top:10px;}
+.fc-section-title{font-size:12px;font-weight:900;color:rgba(0,0,0,.55);text-transform:uppercase;letter-spacing:.6px;margin:4px 0 6px;}
+.fc-row .fc-remove{margin-left:0;border:none;background:rgba(0,0,0,.06);color:rgba(0,0,0,.62);border-radius:10px;padding:6px 8px;font-size:11px;font-weight:900;cursor:pointer;white-space:nowrap;}
+.fc-row .fc-remove:hover{background:rgba(255,106,0,.12);color:var(--orange-dark);}
+/* final: samakan layout row di sheet pesanan */
+.fc-row-wrap{display:grid;grid-template-columns: minmax(0,1fr) 86px auto auto;align-items:center;gap:10px;}
+.fc-remove{justify-self:end;}
+
+
+/* ─── ALWAYS OPEN SECTIONS (Map/Voucher) ─────────────────── */
+.sec-details.always-open .sec-summary-static{padding:12px 14px;font-weight:900;color:var(--orange-dark);display:flex;align-items:center;gap:10px;}
+.sec-details.always-open{padding-bottom:14px;}
+
+
+/* ─── PHOTO ICONS (REALISTIC) ───────────────────────────── */
+.ico-img{width:18px;height:18px;border-radius:6px;object-fit:cover;display:inline-block;vertical-align:-3px;box-shadow:0 6px 14px rgba(0,0,0,.10);} 
+/* Ikon khusus biar Beef Slice US lebih jelas */
+.ico-beef-us{width:24px;height:24px;border-radius:8px;vertical-align:-5px;box-shadow:0 8px 18px rgba(0,0,0,.12);cursor:zoom-in;transition:transform .12s ease, box-shadow .12s ease, filter .12s ease;}
+.ico-beef-us:hover{transform:scale(1.08);box-shadow:0 10px 22px rgba(0,0,0,.16);filter:saturate(1.05);} 
+/* Low fat: efek sama */
+.ico-beef-us-lowfat{width:24px;height:24px;border-radius:8px;vertical-align:-5px;box-shadow:0 8px 18px rgba(0,0,0,.12);cursor:zoom-in;transition:transform .12s ease, box-shadow .12s ease, filter .12s ease;}
+.ico-beef-us-lowfat:hover{transform:scale(1.08);box-shadow:0 10px 22px rgba(0,0,0,.16);filter:saturate(1.05);}
+.ico-beef-us-lowfat:active{transform:scale(0.94);}
+.ico-beef-us-lowfat.tap-pop{animation:tapPop .22s ease-out;}
+.ico-beef-us:active{transform:scale(0.94);}
+.ico-beef-us.tap-pop{animation:tapPop .22s ease-out;}
+@keyframes tapPop{0%{transform:scale(1);}50%{transform:scale(1.12);}100%{transform:scale(1);}}
+
+/* Lightbox foto detail */
+.img-lightbox{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.62);z-index:9999;padding:18px;}
+.img-lightbox.show{display:flex;}
+.img-lightbox-card{width:min(520px,92vw);background:white;border-radius:18px;overflow:hidden;box-shadow:0 18px 60px rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.25);}
+.img-lightbox-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:linear-gradient(135deg,#FFF8F0,#FFF3E6);border-bottom:1px solid rgba(0,0,0,.06);}
+.img-lightbox-title{font-size:12px;font-weight:800;color:var(--text);}
+.img-lightbox-close{border:none;background:white;border-radius:999px;padding:6px 10px;font-weight:900;cursor:pointer;border:1px solid rgba(0,0,0,.08);}
+.img-lightbox-close:hover{background:var(--warm);}
+.img-lightbox-img{width:100%;height:auto;display:block;background:#fff;}
+.img-lightbox-note{padding:10px 14px;font-size:11px;color:var(--text-muted);line-height:1.5;}
+.ico-lg{width:22px;height:22px;border-radius:8px;vertical-align:-4px;}
+.ico-round{border-radius:999px;}
+</style>
+<meta content="Order Enjoy Grill (Shabu &amp; Grill Home Service) — pilih paket atau Custom Paket, isi data, dan kirim order via WhatsApp." name="description"/><meta content="#FF6A00" name="theme-color"/></head>
+<body class="eg-compact">
+<div class="floaters" id="floaters"></div>
+<div class="modal-overlay" id="resetModal">
+<div class="modal-box">
+<div class="modal-title">🔄 Mulai Ulang Order?</div>
+<div class="modal-body">Semua data yang sudah kamu isi akan dihapus. Yakin mau mulai dari awal?</div>
+<div class="modal-btns">
+<button class="modal-btn-cancel" onclick="closeResetModal()">Tidak, Lanjut</button>
+<button class="modal-btn-confirm" onclick="doReset()">Ya, Mulai Ulang</button>
+</div>
+</div>
+</div>
+<div class="header">
+<div class="logo-wrap" onclick="goToSlide(0)">
+    <img class="logo-img" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/7QCEUGhvdG9zaG9wIDMuMAA4QklNBAQAAAAAAGgcAigAYkZCTUQwYTAwMGFiMzAxMDAwMDBiMDMwMDAwNzEwNDAwMDBlOTA1MDAwMDJhMDcwMDAwMjgwOTAwMDAxYTBjMDAwMDczMGMwMDAwOWEwZDAwMDA3NzBlMDAwMGUzMTEwMDAwAP/bAIQABQYGCwgLCwsLCw0LCwsNDg4NDQ4ODw0ODg4NDxAQEBEREBAQEA8TEhMPEBETFBQTERMWFhYTFhUVFhkWGRYWEgEFBQUKBwoICQkICwgKCAsKCgkJCgoMCQoJCgkMDQsKCwsKCw0MCwsICwsMDAwNDQwMDQoLCg0MDQ0MExQTExOc/8IAEQgAlgCWAwEiAAIRAQMRAf/EAH4AAQABBQEBAAAAAAAAAAAAAAAHAgMEBQYBCBAAAQIEAgcDCgUEAwAAAAAAAQIRAAMSIQQxEyIwQVFhcSAykQUUQlKBobHB4fAQI1By0RUzQGJDYPERAQABAwMDBAICAwEAAAAAAAERACExQVFhcYGRMKGx8CDB0eEQUPFA/9oADAMBAAIAAwAAAAGZQAAAAAAAAIamWGiZQAAPPcHz3Ms85dsZfQVaLQ+Vd+pqycEABDUyw0TKABz++j/BzuxiLzQWcjYabodQedRHOT759J58VyDkYu0GXiAIamWGiZQAWeL66C9dssXcWc+1e1+F5qbljHyNroLmRtJk+fZLtWZmGz1gCGplhomUAGHCM9YGFl/Ou+5a/Wwc/uqKc7hMSU4pu4tyU+L+gLFOWM7CAQ1MsNEygAWbyn2N4i+o+d1WRAlzu9Tfr4vZSF3dNGD1HrLtBftgIamWGiZQDwtVx9dwtp3NUf53tPZ2+N3PtreOMx/Lvee8BufaOmq5fqL+MFyyhqZYaJlABieZlFNWuqyqqase5U9pxa8jzz3FuX7nqzklVIe+IamWGiZQAAAAAAAAIamWGiZUNCZUNCZUNCZUNCZUNCZUNCZUNCZUNCZUNCZYaD//2gAIAQEAAQUC/TgXhEwKisOFPt1NNSMYEzMLNSpUjECcUYvRzQX2mNnBKZholzMd5vAXiJwVOmR52sRKWiYhBCE7Ilonoqm4/EGXGEw4UZ07RjFYUoiYu90nA47SmQltktmnzZaEYaV5yZuIpOHT5vE/G1xhkaSMSIwUwJnYacJR2M/uLSsS8ViRMRLlGTGOxAMDDqJtLCl65slAmV7Gf3JsmYZGGm6NeJxoMSVUwMRVAlrxCZ6CmFawTImI2c6WFCdI0apS0gnCyFQnASUmdiUygjPASdLMkjV2Sw48o4HTBYKYlTJiE+dTVJUCqJEheJOGwCZSdo0T8KiYF+Qo/pEwRJ8hoiTh9GNnWIeKxBUBDwwgqAgqAh4eAX2OFAjWQVaPQAI0kuXUjBhwNGVKZSkdzBzEiMDMTTsNCiCUpjUh0TIrEJUIXRFSXdEJQgwJSRsil40YigRoxGjEFAMaMRQIAb9f/9oACAEDAAE/AdqB4bzwhWDUlKlFJZkqSdxqIt1Y+IhGAWqtLGqWkKI4vu6t7+35PkiYvWLBAq6lMIXoapaGmqWXKinVDZWve8KMw92aqpnIc8AbD7tEjylMQzkrSGfj4/zE+RTrO9YqFrF1G3Jhnz7WDRqLW51DkMtZKhf6RIlAMkb7vmCz++1o/MUNEAF02rTv4PwO43ifKTIk0HvrIJ9nyGUYNOlTMll6Wcf6kOX9uXakTwlKpZFlkXdmIcDqLwmYoDRWAJ37jEtE+XqpUG++UYtFLVKKlnPkIlK0KQtsyQ3Kkj59oFoqEzOyhv4/WE6XJKyeivlAQA5UoOPR3wuYV5nLIbh2leTmUpIXdOThqjUzZ2/mDgGqLq1SsNRdVBSHSHuNb2AGJuG0YWdJ3TSzMXNx01XfgoNAwHNVg5UwCTq1apKg/WwibgaAohVVJZm4FonydEtSeBLFmfn2aicyT7Yr5nleHHOKuvjFfAnxgknMv/j/AP/aAAgBAgABPwHakwJ4JABGZBHSDiUikvZRZ/vn28fiNDLJF3t4wDpgmap5SALJdlK+nvMShLSWKEpCnptc9TeMR5OSsan5ahcN3TyI4dIkz6tVmpNJBzDD3v8ADtY5jSi35mq5d8xYZ362ibN3rtmEIy3CJcsf3JuZyB/iJazMXV6IjEiibKWlgVOlWesPhbm3axcpRpWkh5ZdiAXG/oW3iDKRMIm96zjgRuhRlruReJRfIMIVM0k0y/UQ5PAki3gO0pNQIO8N4wAvBW/uSjubWR9DHn0nNRpf1kkfJomYtRYSZSjV/wAhDJHO+fwiTh0ynYXV3lZlR5ntDF2Bpz4bgzvHnOVhenfYO+fhAXpCkFAPpObi31y5GPOeQzYBy+bXAEIxNRAIZ+fJ4lLrAPH3dmngBFPSGPKG6RTyEAN/j//aAAgBAQAGPwL9OeC24sYbeflB5bcgGx3wtKrJFh7ImqyuPACFZavd49YXvQpX2drTvV9vBvkmKQov6oh0ISkD2n3w1YffaNdII4ptBKS594hA5AbN4PPLpAlpLr690fzF3p3q4+2EiX3ar71Ck7oSs3J1rQFbjFSbK+MIJ9GxHqv8oVdyTfg+yL5NeEKBqpfwhcxZZ7mBJzFPsU+TQK78DwH3nCpaCUpa/OGO6HG6EH0Zmqr2/WDLUfS1evDZL/afhFVTo1XS25+MFMvPVZrGEqUHqF29H73wNGTzbIxVkN8EDxhjkY/aYlFawoVp9Ftkv9p+EK19VqqKeHPOErPdIYxQglzmQ4twgpg/CNVJtF805teB/sREiqZWCsMKWb27O8Kl8Lp6QCtLg2PKCqluDHOCbnqbQN1rJhSTvir0JXxhPTZtHBQyMFEwUqhgem+M2PRoBUWPOGQNX0lwE7h7+u2pUkERqLUnlmIvNt+2HUVL62HhDZDltMx4/hmIz/HOM9oHErvbzrZxOWLprIUPnAdtIEW45wdL6qaKsma8LpyQp5R6fKDMPemfDcIm6ZqnPe9Xc0Svy6ho+7/7EvgZ1h6vKFgkOZirRS4epVt+ex7qfAR198DVHK0XD77iMotllF0u3IRlfJ47vPL3xVSPAQ9Ifps8vwy/HL/oP//aAAgBAQEBPyH/AFqwTtRgFxJOjW4kQ5EpATsKdIT80EAzKHhif365yxSHDf8Aik4sYSxqxf8A5Uq4OS2BNMTAfYhHurcITGmkKACYfUSZlAbDq6aUbHQTuxB5aQSS1bnXb5p7IK73L/wKG3XE8BGKIbhGR4x8VDjLo26htzinE3QcsUPpEFMAStNKuAexaplEJvI+KWmx2o3bU2G7igy/IMm5Zkb9lp4HYqNwHGt3xSEzBbT7FWaxkmw+HmpDwT3gR14TjGlFLnL4MHQj0ut67bWhfgqdUjnXNimlk1glh0DYj4pRS5CMIwaNWzIWieLzTNIDQSzBoeJoLOzn+q+B9KRVv1ge0PeoKEwW6t6T6vdVukghjISfu0AiDCzZLZEKOtzEZs01aSlysNPARr1KBnAXVpBeXdSbQgoLb2f1UyCgiyqPe3pfU7qvh2Rhf2UHkBp4+4pKHC4Gzy8Uy1jE8UwsZDVtT1RLTHlzUJZNEkPJTjmSd6kdhSZhLou2NfTfwmB7mp3KZHLl3WPb3ormRzrzb7FZggJMXd4irj8Ji4UmLRtQEJOGCXSDjFDXCT5rELFtnT4z2qAuHpy26jFPa/Dw+1MdQMPI0iSR0PelG8dgn2omMMuVSvEoQsf3xQm6G7dc0Eeoypdo1a5yOTtRkvOD+BpQWlsl+T5rKhp8wX96tkNiwOh6n/OUFm5bPFJ83JV0QHKFRtcvjmruk5j+qyIOqFZQHVCo2uXxfNAcM0GDPT0Grvkr+KPih8ND0t2Lfikysi/QrHvSBjaBZtE2mak6ZrNMmPZT33c6GwUUJDEKPp2pOE5pMYJ3yihdsBZZhSB1FJBZdqNMTgkamno6177aVNiBk2Mrd6m2hGs2LsmxTiADAt5v7VGBIHSDFtO9RQMSgBBiaabShlM7T/yiLgLIFuJ0KNAWZ22f296jRPMzcneaWgO4E/HpBkfc0bL5oBkM/cYoPR9/5XH7p+6UlL9WlZsvnmlrx9aMQfz/AL//2gAMAwEBAgEDAQAAEPPPPPPPPPKPPOIQsPPPKPPIxF9PvPKPPMs4avtPKPPKgAEiXPKPPPKyMFPPKPPFJbRq/PKPPGfo73XPKPPPPPPPPPKMMMMMMMMMIP/aAAgBAwEBPxD1ZkmSQQTd+4ljWKGXEZcElF5ExiCkSLeiQweXGoT85aynWCDtMusFYXiKdkWCUuDAVpQWOnYhval2RXMKIBrwLgl2qC6845/K+4SLU7hJGDqU0pBot6MFc3gVrs+F6EEaiYq0RgLlfse6rxWCizC7wQ/kgtUioCwxJdPinCshRf8AVQ/hMhO3Kak5KTfY0nadKS6IyUDcuz7fykCZETtSeznLHnhWhA0h8SmO1XQxqlby/wB1HYMCwcH5FY0LYKCUUnSdg5mgCX6EiAhJIK2kL0N9Ru8mGk2bpW86JYYlkYtkMMJLc4plxMhvXMLERfJOHWmRliJYjADZ7/jpI+ta3XTLRv5p+R3qMAttthOY4rgZzw1rKGi7Pz/5/wD/2gAIAQIBAT8Q9WCYuwwTExU+kyi5Fl6Sdxo1BNGyNXiHhPzYBK5uAbxuxBzV28vsJt6n+COcC7lQAJrdzBgXyY0y/JSReOQVkGFrA5f8UHaG+j5/9qJsMH3mvbd0ex+QQJMKWuRR21zSf84oSO8Z6AX4s76M/kWDMughqAuZyPGnivT9RJr+ytvTUUHPKbqn0PyZXYmZSlcWvGsaTQ2GGh0tQ4slhupQTGEICLFJM2cpKYEm4AM8hDwS1ERGM8oNDPnihHiwUGZOnX8YGB2r6R/gTobvBQYAdP8Az//aAAgBAQEBPxD/AFpsmAKvBSMwybhI+Kj6ZAUaMnJCOEZKZ8AbfUOIWpsJWvYQ6wPPqrFTVuwZXQHJIqoEavxvdP4UCSt70et6wHRtpZAvhpQ3koWodwb7lIBICJhG4+PUlMctJHB8lSisi396UZbrz18X9FY0NMfXImjICZDf6aL0d2Xh80dKW3hG+5bqWi6uW9t0LroUDhmLPD6QslkWALq0D3kNFGytRfwfwhoPcZo5fuBI514jNSKR1iC64/iQNJv9Nq7Kgfs5DANAo5Nx92JgdGutfvmrk1OwmiCE7wx2YHpB2vQETLtV0a1XYTQwkrXq4hHRFnQUZPs0nfL1ry2xF+WrwpuRRr/wbI1kJ9Z71BpTn5iKworiaoDka4Yi6sR6fbVJwZkrIWoBQoV461Sr85onfuh9WvMsGNLG6TNjzVkqTV2x0rUF95tSF9De7JRvuX7/ACrB4qtbdB6IkTNc/QR2eZfaj41/SAi6xzS3A5wy8LpzhvVrmTk+iohzbUp3s6/gFQUjMw6H6KiHaBy/utPpY0LzhqHpRL61ql/iQrU/L5323VA85ouLukiaaoOIPuaV65nGVVgSvdR8iKBqdhqOKXUAPy7zXVYNnb9cN6+3Uk/v07vRCLVwy+y8/wAy/Xl23Z4j1rJvMYXiJVczOkFHYZemliAOwLn6QVu1SMpnUOqOmKAAWCx6hBEkdGnBiZPaO51FFbKe7J+ShnfnxKpH2cx7xpgASIIEaBUemOwSzEXZ81YiTiCMjR270EKAJFKTcvcokVsID3WmyepHhv2qaOEyXjekcTeLh0lKfBtuEh5aTkkMFC5wG/ap2CCjCMJkY14oSSGJQkmceiT0BL2ys5MDukeahMf6EWq1/wDl/Zh0hm7vSG8qQJIx/VAzXFJZhrb/AOC8Q4QsHcbLGeptWGHCSIjJmsWNTKU5Y9EFhEZm5OZnVNKYz8F293b8VdsCtIkFnQ4vVky6QGcULHigjGLVi20TxRTGIk4SwRWJ3h4jL50wRJRaawXkjYq48KDmXPekABw+NE3nWaCjzIWHeSU+klILAX2GHveganXqtebXbY4p9ARDdh6y+FcEYypiIW5EIjEWrobja6CJtYxarsFl7hEYvbBioIpGO4N9W4U8oyzN0nVMN+9AsBuvuVf9/wD/2Q==" alt="Enjoy Grill Logo"/>
+    <div class="logo-text">
+        <span class="logo-brand">ENJOY GRILL</span>
+        <span class="logo-sub">Home Grill Service</span>
+    </div>
+</div>
+<div class="progress-bar-outer"><div class="progress-bar-fill" id="progressBar"></div></div>
+<div class="progress-pct" id="progressPct">0%</div><div class="live-pill secondary" id="livePill">● Live</div>
+</div>
+<div class="main">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+<div class="order-id-badge" id="orderIdBadge">📋 Generating...</div><button class="copy-btn" data-copy-target="#orderIdBadge" id="copyOrderIdBtn" type="button">Salin ID</button>
+<button class="btn-reset" onclick="openResetModal()">🔄 Mulai Ulang</button>
+</div>
+<div class="draft-notice secondary" id="draftNotice">💾 <span>Draft ditemukan! Data kamu sudah dipulihkan otomatis.</span></div>
+<div class="step-indicator" id="stepDots"></div>
+<div class="step-labels secondary" id="stepLabels"></div>
+<div class="slide-viewport">
+<div class="slide-track" id="slideTrack">
+<!-- ══════════════════════════════════════
+           SLIDE 1: PILIH ALAT / PAKET
+      ══════════════════════════════════════ -->
+<div class="slide" id="slide-0">
+<div class="slide-step-badge">🔥 Langkah 1 dari 4</div>
+<h3>Pilih Alat &amp; Paket</h3>
+<div class="subtitle">Pilih paket siap bakar atau Custom Paket sesuai kebutuhan kamu 🍖</div>
+<!-- MAPS -->
+<div class="sec-details always-open"><div class="sec-summary-static">📍 Lokasi Enjoy Grill</div><div class="map-section">
+<div class="map-embed-wrap">
+<iframe allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=Indopower%20International&amp;output=embed" title="Lokasi (Google Maps)">
+</iframe>
+<div class="map-badge">📍 Indopower International · Jakarta Barat</div>
+</div>
+<button class="map-open-btn" onclick="window.open('https://maps.app.goo.gl/VbNtWJM1JckHNcWz6','_blank')">
+            🗺️ Buka di Google Maps ↗
+          </button>
+</div></div>
+<!-- MODE SELECTOR -->
+<div style="font-size:13px;font-weight:700;color:var(--text-muted);margin-bottom:12px;">Pilih cara order:</div>
+<div class="mode-selector">
+<div class="mode-btn active" id="mode-paket" onclick="setMode('paket')">
+<div class="mode-btn-icon">📦</div>
+<div class="mode-btn-name">Pilih Paket</div>
+<div class="mode-btn-desc">Sudah termasuk bahan lengkap</div>
+</div>
+<div class="mode-btn" id="mode-custom" onclick="setMode('custom')">
+<div class="mode-btn-icon">🧑‍🍳</div>
+<div class="mode-btn-name">Custom Paket</div>
+<div class="mode-btn-desc">Pilih alat + bahan ala carte</div>
+</div>
+</div>
+<!-- SECTION PAKET -->
+<div id="section-paket">
+<div class="porsi-est" id="porsiPaketBox">
+<div class="porsi-est-row">
+<div class="porsi-est-ico">🧑‍🤝‍🧑</div>
+<div>
+<div class="porsi-est-title">Estimasi porsi (orang)</div>
+<div class="porsi-est-sub">Asumsi konservatif: 200–250g protein/orang (plus side).</div>
+<div class="porsi-est-pill" id="porsiPaketPill">👥 <b>0</b></div>
+</div>
+</div>
+</div>
+<div class="paket-tabs">
+<button class="paket-tab active" onclick="setPaketTab('grill')">🔥 Paket Grill</button>
+<button class="paket-tab" onclick="setPaketTab('shabu')">🍲 Paket Shabu &amp; Grill</button>
+</div>
+<!-- PAKET GRILL -->
+<div class="paket-grid" id="tab-grill">
+<div class="paket-card grill-type" id="paket-g1" onclick="selectPaket('g1')">
+<div class="paket-popular" id="pop-g1" style="display:none">⭐ TERLARIS</div>
+<div class="paket-card-header">
+<div class="pax-badge" data-pax-for="g1">👥 <b id="pax-g1">–</b> <span>orang</span></div>
+<div class="paket-badge">🔥 PAKET GRILL 1</div>
+<div class="paket-name">Paket Grill 1</div>
+<div class="paket-price">Rp 189.000</div>
+<div class="paket-check">✓</div>
+</div>
+<div class="paket-card-body">
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Beef Slice US</strong> 250gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Ayam Slice</strong> 250gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Sosis</strong> 250gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span>Bawang Bombay, Selada, Enoki</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span>Saus 1 botol · Peralatan Grill</span></div>
+</div>
+</div>
+<div class="paket-card grill-type" id="paket-g2" onclick="selectPaket('g2')">
+<div class="paket-card-header">
+<div class="pax-badge" data-pax-for="g2">👥 <b id="pax-g2">–</b> <span>orang</span></div>
+<div class="paket-badge">🔥 PAKET GRILL 2</div>
+<div class="paket-name">Paket Grill 2</div>
+<div class="paket-price">Rp 359.000</div>
+<div class="paket-check">✓</div>
+</div>
+<div class="paket-card-body">
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Beef Slice US</strong> 1.000gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Ayam Slice</strong> 250gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Sosis</strong> 250gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span>Bawang Bombay, Selada, Enoki</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span>Saus 2 botol · Peralatan Grill</span></div>
+</div>
+</div>
+<div class="paket-card grill-type" id="paket-g3" onclick="selectPaket('g3')">
+<div class="paket-card-header">
+<div class="pax-badge" data-pax-for="g3">👥 <b id="pax-g3">–</b> <span>orang</span></div>
+<div class="paket-badge">🔥 PAKET GRILL 3</div>
+<div class="paket-name">Paket Grill 3</div>
+<div class="paket-price">Rp 599.000</div>
+<div class="paket-check">✓</div>
+</div>
+<div class="paket-card-body">
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Beef Slice US</strong> 2.000gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Ayam Slice</strong> 500gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Sosis</strong> 500gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span>Bawang Bombay, Selada, Enoki</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span>Saus 4 botol · Peralatan Grill 2 Set</span></div>
+</div>
+</div>
+<div class="paket-card grill-type" id="paket-g4" onclick="selectPaket('g4')">
+<div class="paket-card-header">
+<div class="pax-badge" data-pax-for="g4">👥 <b id="pax-g4">–</b> <span>orang</span></div>
+<div class="paket-badge">🔥 PAKET GRILL 4</div>
+<div class="paket-name">Paket Grill 4</div>
+<div class="paket-price">Rp 799.000</div>
+<div class="paket-check">✓</div>
+</div>
+<div class="paket-card-body">
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Beef Slice US</strong> 3.250gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Ayam Slice</strong> 500gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Sosis</strong> 500gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span>Bawang Bombay, Selada, Enoki</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span>Saus 6 botol · Peralatan Grill 2 Set</span></div>
+</div>
+</div>
+</div>
+<!-- PAKET SHABU -->
+<div class="paket-grid" id="tab-shabu" style="display:none">
+<div class="paket-card shabu-type" id="paket-s1" onclick="selectPaket('s1')">
+<div class="paket-card-header">
+<div class="pax-badge" data-pax-for="s1">👥 <b id="pax-s1">–</b> <span>orang</span></div>
+<div class="paket-badge">🍲 PAKET SHABU &amp; GRILL 1</div>
+<div class="paket-name">Shabu &amp; Grill 1</div>
+<div class="paket-price">Rp 269.000</div>
+<div class="paket-check">✓</div>
+</div>
+<div class="paket-card-body">
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Beef Slice US</strong> 250gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Ayam Slice</strong> 250gr · <strong>Sosis</strong> 250gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Suki-Sukian</strong> 250gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span>Bumbu Tomyam, Bombay, Selada, Enoki</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span>Saus 1 botol · Peralatan Shabu &amp; Grill</span></div>
+</div>
+</div>
+<div class="paket-card shabu-type" id="paket-s2" onclick="selectPaket('s2')">
+<div class="paket-card-header">
+<div class="pax-badge" data-pax-for="s2">👥 <b id="pax-s2">–</b> <span>orang</span></div>
+<div class="paket-badge">🍲 PAKET SHABU &amp; GRILL 2</div>
+<div class="paket-name">Shabu &amp; Grill 2</div>
+<div class="paket-price">Rp 439.000</div>
+<div class="paket-check">✓</div>
+</div>
+<div class="paket-card-body">
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Beef Slice US</strong> 1.000gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Ayam Slice</strong> 250gr · <strong>Sosis</strong> 250gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Suki-Sukian</strong> 250gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span>Bumbu Tomyam, Bombay, Selada, Enoki</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span>Saus 2 botol · Peralatan Shabu &amp; Grill</span></div>
+</div>
+</div>
+<div class="paket-card shabu-type" id="paket-s3" onclick="selectPaket('s3')">
+<div class="paket-card-header">
+<div class="pax-badge" data-pax-for="s3">👥 <b id="pax-s3">–</b> <span>orang</span></div>
+<div class="paket-badge">🍲 PAKET SHABU &amp; GRILL 3</div>
+<div class="paket-name">Shabu &amp; Grill 3</div>
+<div class="paket-price">Rp 749.000</div>
+<div class="paket-check">✓</div>
+</div>
+<div class="paket-card-body">
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Beef Slice US</strong> 2.000gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Ayam Slice</strong> 500gr · <strong>Sosis</strong> 500gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Suki-Sukian</strong> 500gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span>Bumbu Tomyam, Bombay, Selada, Enoki</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span>Saus 4 botol · Peralatan Shabu &amp; Grill 2 Set</span></div>
+</div>
+</div>
+<div class="paket-card shabu-type" id="paket-s4" onclick="selectPaket('s4')">
+<div class="paket-card-header">
+<div class="pax-badge" data-pax-for="s4">👥 <b id="pax-s4">–</b> <span>orang</span></div>
+<div class="paket-badge">🍲 PAKET SHABU &amp; GRILL 4</div>
+<div class="paket-name">Shabu &amp; Grill 4</div>
+<div class="paket-price">Rp 999.000</div>
+<div class="paket-check">✓</div>
+</div>
+<div class="paket-card-body">
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Beef Slice US</strong> 3.250gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Ayam Slice</strong> 500gr · <strong>Sosis</strong> 500gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span><strong>Suki-Sukian</strong> 1.000gr</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span>Bumbu Tomyam, Bombay, Selada, Enoki</span></div>
+<div class="paket-item"><div class="paket-item-dot"></div><span>Saus 6 botol · Peralatan Shabu &amp; Grill 2 Set</span></div>
+</div>
+</div>
+</div>
+</div>
+ SECTION CUSTOM / Custom Paket 
+<div id="section-custom" style="display:none">
+<div class="product-row" id="row-grill">
+<div class="product-emoji">🔥</div>
+<div class="product-info">
+<div class="product-name">Grill Set</div>
+<div class="product-desc">Kompor · Pan Grill · Gas · Capitan + 4 set alat makan sekali pakai</div>
+<div class="product-price">Rp 70.000 / unit</div>
+</div>
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyAlat('grill',-1)">−</button>
+<div class="qty-num" id="qty-grill">0</div>
+<button class="qty-btn" onclick="changeQtyAlat('grill',1)">+</button>
+</div>
+</div>
+<div class="product-row" id="row-shabu">
+<div class="product-emoji">🍲</div>
+<div class="product-info">
+<div class="product-name">Shabu &amp; Grill Set</div>
+<div class="product-desc">Kompor · Pan · Capitan · Centong · Gas · Kuah Tomyam + 4 set alat makan</div>
+<div class="product-price">Rp 85.000 / unit</div>
+</div>
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyAlat('shabu',-1)">−</button>
+<div class="qty-num" id="qty-shabu">0</div>
+<button class="qty-btn" onclick="changeQtyAlat('shabu',1)">+</button>
+</div>
+</div>
+<div class="product-row" id="row-shabuonly">
+<div class="product-emoji">🫕</div>
+<div class="product-info">
+<div class="product-name">Shabu Only</div>
+<div class="product-desc">Kompor · Panci Shabu · Centong · Gas · Kuah Tomyam + 4 set alat makan</div>
+<div class="product-price">Rp 75.000 / unit</div>
+</div>
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyAlat('shabuonly',-1)">−</button>
+<div class="qty-num" id="qty-shabuonly">0</div>
+<button class="qty-btn" onclick="changeQtyAlat('shabuonly',1)">+</button>
+</div>
+</div>
+<div class="porsi-hint" id="porsiHint"></div>
+<div class="note-box secondary">📦 <strong>Butuh lebih dari 10 unit?</strong> Hubungi admin: <strong><a href="https://wa.me/6285771276910">085771276910</a><button class="copy-btn" data-copy-text="085771276910" type="button">Salin</button></strong></div>
+</div>
+</div>
+<!-- ══════════════════════════════════════
+           SLIDE 2: BAHAN MAKANAN / ADD-ONS
+      ══════════════════════════════════════ -->
+<div class="slide" id="slide-1">
+<div class="slide-step-badge">🥩 Langkah 2 dari 4</div>
+<h3>Pilih Bahan &amp; Add-Ons</h3>
+<div class="subtitle">Tap <strong>ℹ️ Lihat Detail</strong> untuk info lengkap setiap bahan 😋</div>
+<div id="porsiRecoBahan" style="display:none;background:linear-gradient(135deg,#E6F7EE,#FFF8F0);border:1.5px solid #A3D9B1;border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:16px;font-size:12px;color:#1A7A3C;font-weight:600;line-height:1.7;"></div>
+<div id="paketModeNote" style="display:none;background:#FFF3E6;border:1.5px solid rgba(255,107,53,0.3);border-radius:var(--radius-sm);padding:10px 14px;font-size:12px;color:var(--text-muted);margin-bottom:16px;font-weight:600;">
+          ✅ Kamu sudah pilih paket. Semua bahan di bawah ini adalah <strong>Add-On tambahan</strong> opsional!
+        </div>
+<div class="porsi-est" id="porsiBahanBox">
+<div class="porsi-est-row">
+<div class="porsi-est-ico">🧑‍🤝‍🧑</div>
+<div>
+<div class="porsi-est-title">Estimasi porsi (live)</div>
+<div class="porsi-est-sub">Update otomatis saat kamu tambah add-ons.</div>
+<div class="porsi-est-pill" id="porsiBahanPill">👥 <b>–</b></div>
+</div>
+</div>
+</div>
+<!-- BEEF SLICE -->
+<div class="prod-section-hdr mandatory-hdr">🥩 </div>
+<!-- Beef US -->
+<div class="bahan-card" id="vrow-beef_lemak">
+<div class="bahan-card-top">
+
+<div class="bahan-info">
+<div class="bahan-name">Beef Slice US (Lemak)</div>
+<div class="bahan-tagline">Shortplate · Juicy · Cocok untuk grill</div>
+<div class="bahan-price">250gr · Rp 45.000</div>
+</div>
+<div class="bahan-qty">
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyV('beef_lemak',-1)">−</button>
+<div class="qty-num" id="qty-beef_lemak">0</div>
+<button class="qty-btn" onclick="changeQtyV('beef_lemak',1)">+</button>
+</div>
+<button class="row-remove-btn" id="rmv-beef_lemak" type="button" onclick="removeV('beef_lemak')">Hapus</button>
+</div>
+</div>
+<button class="bahan-detail-toggle" onclick="toggleDetail('det-beef_lemak',this)">
+            ℹ️ Lihat Detail Produk <span class="arrow">▾</span>
+</button>
+<div class="bahan-detail-body" id="det-beef_lemak">
+<span class="bahan-grade-tag grade-standard">🇺🇸 Imported US Beef</span>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🥩</div>
+<div class="bahan-detail-text"><strong>Potongan:</strong> Shortplate — bagian perut bawah sapi yang kaya lemak marbling. Teksturnya empuk dan sangat beraroma saat dipanggang.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🔥</div>
+<div class="bahan-detail-text"><strong>Cara masak:</strong> Ideal untuk grill/yakiniku. Panggang 30–60 detik per sisi, jangan terlalu matang agar lemak tetap juicy dan lumer di mulut.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">😋</div>
+<div class="bahan-detail-text"><strong>Rasa:</strong> Gurih kuat, berlemak, sangat cocok dipadukan saus BBQ atau black pepper untuk rasa yang lebih bold.</div>
+</div>
+</div>
+</div>
+<!-- Beef US Low Fat -->
+<div class="bahan-card" id="vrow-beef_nlemak">
+<div class="bahan-card-top">
+
+<div class="bahan-info">
+<div class="bahan-name">Beef Slice US (Low Fat)</div>
+<div class="bahan-tagline">Shortplate · Lebih lean · Cocok grill &amp; shabu</div>
+<div class="bahan-price">250gr · Rp 45.000</div>
+</div>
+<div class="bahan-qty">
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyV('beef_nlemak',-1)">−</button>
+<div class="qty-num" id="qty-beef_nlemak">0</div>
+<button class="qty-btn" onclick="changeQtyV('beef_nlemak',1)">+</button>
+</div>
+<button class="row-remove-btn" id="rmv-beef_nlemak" type="button" onclick="removeV('beef_nlemak')">Hapus</button>
+</div>
+</div>
+<button class="bahan-detail-toggle" onclick="toggleDetail('det-beef_nlemak',this)">
+            ℹ️ Lihat Detail Produk <span class="arrow">▾</span>
+</button>
+<div class="bahan-detail-body" id="det-beef_nlemak">
+<span class="bahan-grade-tag grade-standard">🇺🇸 Imported US Beef</span>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🥩</div>
+<div class="bahan-detail-text"><strong>Potongan:</strong> Shortplate versi lebih sedikit lemak. Daging tetap empuk dengan tekstur yang sedikit lebih padat dibanding versi lemak.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🔥</div>
+<div class="bahan-detail-text"><strong>Cara masak:</strong> Serbaguna — cocok untuk dipanggang di grill maupun direbus di kuah shabu/tomyam. Matang lebih cepat karena lebih tipis lemaknya.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">💡</div>
+<div class="bahan-detail-text"><strong>Cocok untuk:</strong> Yang lebih suka daging dengan rasa lebih ringan, atau yang ingin menikmati beef di kuah shabu untuk cita rasa kaldu yang gurih alami.</div>
+</div>
+</div>
+</div>
+<!-- Beef AUS Yoshinoya -->
+<div class="bahan-card" id="vrow-beef_lemak_aus">
+<div class="bahan-card-top">
+
+<div class="bahan-info">
+<div class="bahan-name">Beef Slice Yoshinoya (AUS)</div>
+<div class="bahan-tagline">Premium Import Australia · Marbling tinggi</div>
+<div class="bahan-price">500gr · Rp 75.000</div>
+</div>
+<div class="bahan-qty">
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyV('beef_lemak_aus',-1)">−</button>
+<div class="qty-num" id="qty-beef_lemak_aus">0</div>
+<button class="qty-btn" onclick="changeQtyV('beef_lemak_aus',1)">+</button>
+</div>
+<button class="row-remove-btn" id="rmv-beef_lemak_aus" type="button" onclick="removeV('beef_lemak_aus')">Hapus</button>
+</div>
+</div>
+<button class="bahan-detail-toggle" onclick="toggleDetail('det-beef_lemak_aus',this)">
+            ℹ️ Lihat Detail Produk <span class="arrow">▾</span>
+</button>
+<div class="bahan-detail-body" id="det-beef_lemak_aus">
+<span class="bahan-grade-tag grade-import">🇦🇺 Premium Australian Beef</span>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">⭐</div>
+<div class="bahan-detail-text"><strong>Yoshinoya-style cut:</strong> Potongan khas chain restoran Jepang terkenal. Daging sapi Australia yang terkenal dengan kualitas pasture-fed (makan rumput) menghasilkan rasa lebih clean dan fresh.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🥩</div>
+<div class="bahan-detail-text"><strong>Marbling:</strong> Lemak marbling tersebar merata — saat dipanggang, lemak meleleh dan menghasilkan rasa buttery yang khas dan aroma harum yang menggoda.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">💎</div>
+<div class="bahan-detail-text"><strong>Kenapa premium?</strong> Sapi Australia diternakkan dengan standar ketat, pakan berkualitas, tanpa hormon tambahan. Hasilnya daging lebih sehat, rasa lebih clean, dan tekstur konsisten empuk.</div>
+</div>
+</div>
+</div>
+<!-- CHICKEN SLICE -->
+<div class="prod-section-hdr mandatory-hdr">🍗 </div>
+<div class="bahan-card" id="vrow-chicken_dada">
+<div class="bahan-card-top">
+
+<div class="bahan-info">
+<div class="bahan-name">Chicken Dada (Slice)</div>
+<div class="bahan-tagline">Lean · Rendah lemak · Gurih alami</div>
+<div class="bahan-price">250gr · Rp 30.000</div>
+</div>
+<div class="bahan-qty">
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyV('chicken_dada',-1)">−</button>
+<div class="qty-num" id="qty-chicken_dada">0</div>
+<button class="qty-btn" onclick="changeQtyV('chicken_dada',1)">+</button>
+</div>
+<button class="row-remove-btn" id="rmv-chicken_dada" type="button" onclick="removeV('chicken_dada')">Hapus</button>
+</div>
+</div>
+<button class="bahan-detail-toggle" onclick="toggleDetail('det-chicken_dada',this)">
+            ℹ️ Lihat Detail Produk <span class="arrow">▾</span>
+</button>
+<div class="bahan-detail-body" id="det-chicken_dada">
+<span class="bahan-grade-tag grade-standard">🐔 Ayam Segar Lokal</span>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🍗</div>
+<div class="bahan-detail-text"><strong>Bagian:</strong> Dada ayam (breast) diiris tipis-tipis. Daging putih, minim lemak, dan kaya protein — pilihan sehat yang tetap lezat saat dipanggang.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🔥</div>
+<div class="bahan-detail-text"><strong>Cara masak:</strong> Panggang di atas grill panas 1–2 menit per sisi. Jangan terlalu lama agar tidak kering. Cocok dilumuri saus BBQ atau black pepper saat memanggang.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">💡</div>
+<div class="bahan-detail-text"><strong>Cocok untuk:</strong> Yang suka daging lebih lean dan ringan, atau yang menghindari lemak berlebih. Anak-anak biasanya juga lebih suka bagian dada.</div>
+</div>
+</div>
+</div>
+<div class="bahan-card" id="vrow-chicken_paha">
+<div class="bahan-card-top">
+
+<div class="bahan-info">
+<div class="bahan-name">Chicken Paha (Slice)</div>
+<div class="bahan-tagline">Juicy · Berlemak · Rasa lebih bold</div>
+<div class="bahan-price">250gr · Rp 30.000</div>
+</div>
+<div class="bahan-qty">
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyV('chicken_paha',-1)">−</button>
+<div class="qty-num" id="qty-chicken_paha">0</div>
+<button class="qty-btn" onclick="changeQtyV('chicken_paha',1)">+</button>
+</div>
+<button class="row-remove-btn" id="rmv-chicken_paha" type="button" onclick="removeV('chicken_paha')">Hapus</button>
+</div>
+</div>
+<button class="bahan-detail-toggle" onclick="toggleDetail('det-chicken_paha',this)">
+            ℹ️ Lihat Detail Produk <span class="arrow">▾</span>
+</button>
+<div class="bahan-detail-body" id="det-chicken_paha">
+<span class="bahan-grade-tag grade-standard">🐔 Ayam Segar Lokal</span>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🍖</div>
+<div class="bahan-detail-text"><strong>Bagian:</strong> Paha ayam (thigh) diiris tipis. Daging gelap dengan kandungan lemak lebih tinggi — menghasilkan rasa yang lebih juicy, gurih, dan aromatik saat dipanggang.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🔥</div>
+<div class="bahan-detail-text"><strong>Cara masak:</strong> Panggang di grill panas — lemak dari paha akan meleleh dan menambah flavor natural. Rasa panggangnya lebih smoky dibanding dada.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">😋</div>
+<div class="bahan-detail-text"><strong>Cocok untuk:</strong> Pecinta ayam yang menyukai rasa lebih kaya dan juicy. Favorit banyak orang karena teksturnya yang lebih empuk dan tidak mudah kering.</div>
+</div>
+</div>
+</div>
+<!-- SAIKORO & STEAK -->
+<div class="prod-section-hdr premium-hdr"> Saikoro &amp; Beef Steak Premium <span class="optional-chip">Premium</span></div>
+<div class="bahan-card premium-item" id="vrow-saikoro">
+<div class="bahan-card-top">
+
+<div class="bahan-info">
+<div class="bahan-name">Saikoro (Dadu Beef)</div>
+<div class="bahan-tagline">Potongan dadu · Super empuk · Jepang style</div>
+<div class="bahan-price">250gr · Rp 50.000</div>
+</div>
+<div class="bahan-qty">
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyV('saikoro',-1)">−</button>
+<div class="qty-num" id="qty-saikoro">0</div>
+<button class="qty-btn" onclick="changeQtyV('saikoro',1)">+</button>
+</div>
+<button class="row-remove-btn" id="rmv-saikoro" type="button" onclick="removeV('saikoro')">Hapus</button>
+</div>
+</div>
+<button class="bahan-detail-toggle" onclick="toggleDetail('det-saikoro',this)">
+            ℹ️ Lihat Detail Produk <span class="arrow">▾</span>
+</button>
+<div class="bahan-detail-body" id="det-saikoro">
+<span class="bahan-grade-tag grade-premium">⭐ Premium Cut</span>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🥩</div>
+<div class="bahan-detail-text"><strong>Saikoro:</strong> Kata Jepang untuk "dadu". Daging sapi dipotong berbentuk kubus kecil ~2–3cm. Biasanya dari bagian sirloin atau tenderloin yang dipotong lebih tebal.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🔥</div>
+<div class="bahan-detail-text"><strong>Cara masak:</strong> Panggang di grill panas hingga bagian luar agak kecoklatan (seared) tapi dalam tetap pink/medium. Jangan terlalu matang — kunci kelezatan saikoro adalah tekstur tengahnya yang masih lembut.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">✨</div>
+<div class="bahan-detail-text"><strong>Sensasi makan:</strong> Gigitan pertama adalah kerak seared yang gurih, lalu bagian tengah yang juicy meleleh di mulut. Pengalaman makan yang berbeda dari slice biasa!</div>
+</div>
+</div>
+</div>
+<div class="bahan-card premium-item" id="vrow-steak_tenderloin">
+<div class="bahan-card-top">
+
+<div class="bahan-info">
+<div class="bahan-name">Steak Tenderloin Meltique</div>
+<div class="bahan-tagline">Paling empuk · Meltique injection · Super tender</div>
+<div class="bahan-price">200gr · Rp 50.000</div>
+</div>
+<div class="bahan-qty">
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyV('steak_tenderloin',-1)">−</button>
+<div class="qty-num" id="qty-steak_tenderloin">0</div>
+<button class="qty-btn" onclick="changeQtyV('steak_tenderloin',1)">+</button>
+</div>
+<button class="row-remove-btn" id="rmv-steak_tenderloin" type="button" onclick="removeV('steak_tenderloin')">Hapus</button>
+</div>
+</div>
+<button class="bahan-detail-toggle" onclick="toggleDetail('det-steak_tenderloin',this)">
+            ℹ️ Lihat Detail Produk <span class="arrow">▾</span>
+</button>
+<div class="bahan-detail-body" id="det-steak_tenderloin">
+<span class="bahan-grade-tag grade-premium">💎 Meltique Injected</span>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🥩</div>
+<div class="bahan-detail-text"><strong>Tenderloin:</strong> Bagian paling empuk dari sapi — otot yang hampir tidak pernah bekerja keras, sehingga seratnya sangat halus dan teksturnya buttery-soft.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">💉</div>
+<div class="bahan-detail-text"><strong>Apa itu Meltique?</strong> Teknik injeksi lemak nabati (vegetable fat) ke dalam daging menggunakan jarum kecil. Hasilnya daging yang lean menjadi lebih juicy, berlemak, dan meleleh saat dipanggang — mirip wagyu tapi dengan harga lebih terjangkau!</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🔥</div>
+<div class="bahan-detail-text"><strong>Cara masak:</strong> Panggang medium (3–4 menit total) di atas grill panas. Saat lemak injeksi meleleh, aroma dan juiciness-nya akan keluar maksimal.</div>
+</div>
+</div>
+</div>
+<div class="bahan-card premium-item" id="vrow-steak_sirloin">
+<div class="bahan-card-top">
+
+<div class="bahan-info">
+<div class="bahan-name">Steak Sirloin Meltique</div>
+<div class="bahan-tagline">Berkarakter · Sedikit chew · Rasa bold</div>
+<div class="bahan-price">200gr · Rp 50.000</div>
+</div>
+<div class="bahan-qty">
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyV('steak_sirloin',-1)">−</button>
+<div class="qty-num" id="qty-steak_sirloin">0</div>
+<button class="qty-btn" onclick="changeQtyV('steak_sirloin',1)">+</button>
+</div>
+<button class="row-remove-btn" id="rmv-steak_sirloin" type="button" onclick="removeV('steak_sirloin')">Hapus</button>
+</div>
+</div>
+<button class="bahan-detail-toggle" onclick="toggleDetail('det-steak_sirloin',this)">
+            ℹ️ Lihat Detail Produk <span class="arrow">▾</span>
+</button>
+<div class="bahan-detail-body" id="det-steak_sirloin">
+<span class="bahan-grade-tag grade-premium">💎 Meltique Injected</span>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🥩</div>
+<div class="bahan-detail-text"><strong>Sirloin:</strong> Bagian punggung atas sapi. Punya "cap" (lapisan lemak di pinggir) yang memberikan rasa ekstra gurih. Teksturnya sedikit lebih berkarakter (slight chew) dibanding tenderloin — tapi itulah yang disukai pencinta steak sejati!</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">💉</div>
+<div class="bahan-detail-text"><strong>Meltique injection:</strong> Lemak nabati diinjeksikan untuk meningkatkan juiciness dan membuat tekstur sirloin menjadi lebih melt-in-mouth, mempertahankan rasa bold khas sirloin dengan kelezatan lemak yang meleleh.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">😋</div>
+<div class="bahan-detail-text"><strong>Rasa:</strong> Bold, berotot, dan berkarakter — rasa "steak" yang paling autentik. Sangat cocok dipadukan black pepper sauce atau dimakan dengan sedikit garam laut.</div>
+</div>
+</div>
+</div>
+<!-- SOSIS -->
+<div class="prod-section-hdr mandatory-hdr">🌭 </div>
+<div class="bahan-card" id="vrow-sosis_sapi">
+<div class="bahan-card-top">
+
+<div class="bahan-info">
+<div class="bahan-name">Sosis Sapi</div>
+<div class="bahan-tagline">Juicy · Gurih · Meledak saat diigit</div>
+<div class="bahan-price">250gr · Rp 25.000</div>
+</div>
+<div class="bahan-qty">
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyV('sosis_sapi',-1)">−</button>
+<div class="qty-num" id="qty-sosis_sapi">0</div>
+<button class="qty-btn" onclick="changeQtyV('sosis_sapi',1)">+</button>
+</div>
+<button class="row-remove-btn" id="rmv-sosis_sapi" type="button" onclick="removeV('sosis_sapi')">Hapus</button>
+</div>
+</div>
+<button class="bahan-detail-toggle" onclick="toggleDetail('det-sosis_sapi',this)">
+            ℹ️ Lihat Detail Produk <span class="arrow">▾</span>
+</button>
+<div class="bahan-detail-body" id="det-sosis_sapi">
+<span class="bahan-grade-tag grade-standard">🐄 Daging Sapi Halal</span>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🌭</div>
+<div class="bahan-detail-text"><strong>Produk:</strong> Sosis sapi berkualitas dengan kandungan daging sapi minimal 60%. Tersertifikasi halal. Rasa gurih alami dengan sedikit smoky dari bumbu yang digunakan.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🔥</div>
+<div class="bahan-detail-text"><strong>Cara masak:</strong> Panggang di grill panas 3–5 menit sambil sesekali diputar hingga kulit luar sedikit merekah dan kecoklatan. Saat kulit merekah, aroma sosis akan keluar dan teksturnya jadi crispier.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">💡</div>
+<div class="bahan-detail-text"><strong>Tips:</strong> Buat sayatan diagonal ringan di permukaan sebelum dipanggang — kulit akan merekah lebih indah dan bumbu saus lebih mudah meresap!</div>
+</div>
+</div>
+</div>
+<div class="bahan-card" id="vrow-sosis_ayam">
+<div class="bahan-card-top">
+
+<div class="bahan-info">
+<div class="bahan-name">Sosis Ayam</div>
+<div class="bahan-tagline">Ringan · Cocok semua usia · Favorit anak</div>
+<div class="bahan-price">250gr · Rp 25.000</div>
+</div>
+<div class="bahan-qty">
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyV('sosis_ayam',-1)">−</button>
+<div class="qty-num" id="qty-sosis_ayam">0</div>
+<button class="qty-btn" onclick="changeQtyV('sosis_ayam',1)">+</button>
+</div>
+<button class="row-remove-btn" id="rmv-sosis_ayam" type="button" onclick="removeV('sosis_ayam')">Hapus</button>
+</div>
+</div>
+<button class="bahan-detail-toggle" onclick="toggleDetail('det-sosis_ayam',this)">
+            ℹ️ Lihat Detail Produk <span class="arrow">▾</span>
+</button>
+<div class="bahan-detail-body" id="det-sosis_ayam">
+<span class="bahan-grade-tag grade-standard">🐔 Daging Ayam Halal</span>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🌭</div>
+<div class="bahan-detail-text"><strong>Produk:</strong> Sosis berbahan dasar daging ayam. Lebih ringan dari sosis sapi — rasa lebih mild dan tidak terlalu gamey. Favorit anak-anak dan yang prefer rasa lebih lembut.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🔥</div>
+<div class="bahan-detail-text"><strong>Cara masak:</strong> Panggang di grill 2–4 menit hingga kuning keemasan. Karena lebih tipis dari sosis sapi, matangnya lebih cepat. Perhatikan agar tidak gosong.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">😋</div>
+<div class="bahan-detail-text"><strong>Kombinasi:</strong> Sangat cocok dicocol saus BBQ manis atau saus tomat. Biasanya disukai semua kalangan, dari anak-anak hingga orang dewasa.</div>
+</div>
+</div>
+</div>
+<!-- STEAMBOAT -->
+<div class="prod-section-hdr"> Steamboat <span class="shabu-only-tag" id="shabu-only-tag">🔒 Khusus Shabu &amp; Grill</span><span class="mandatory" id="steam-mandatory" style="display:none">*Wajib min. 1</span></div>
+<div class="steam-notice" id="steamNotice" style="display:none">ℹ️ Kamu pilih <strong>Grill</strong> saja — Steamboat Mix khusus untuk <strong>Shabu</strong>, jadi tidak perlu checkout.</div>
+<div class="bahan-card" id="vrow-steam" style="opacity:0.4;pointer-events:none;">
+<div class="bahan-card-top">
+
+<div class="bahan-info">
+<div class="bahan-name">Steamboat Mix</div>
+<div class="bahan-tagline">Bakso · Crabstick · Fishball · Tofu</div>
+<div class="bahan-price">500gr · Rp 50.000 <span class="lock-badge" id="steam-lock-badge" style="margin-left:4px;">🔒 Unlock Shabu</span></div>
+</div>
+<div class="bahan-qty">
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyV('steam',-1)">−</button>
+<div class="qty-num" id="qty-steam">0</div>
+<button class="qty-btn" onclick="changeQtyV('steam',1)">+</button>
+</div>
+<button class="row-remove-btn" id="rmv-steam" type="button" onclick="removeV('steam')">Hapus</button>
+</div>
+</div>
+<button class="bahan-detail-toggle" onclick="toggleDetail('det-steam',this)">
+            ℹ️ Lihat Detail Produk <span class="arrow">▾</span>
+</button>
+<div class="bahan-detail-body" id="det-steam">
+<span class="bahan-grade-tag grade-standard">🍜 Mix Seafood &amp; Tofu</span>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🍜</div>
+<div class="bahan-detail-text"><strong>Isi Mix:</strong> Kombinasi bakso ikan/sapi, crabstick (olahan daging kepiting), berbagai fishball, dan tahu. Semuanya dimasukkan ke dalam kuah tomyam panas untuk hasil terbaik.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🫕</div>
+<div class="bahan-detail-text"><strong>Cara masak:</strong> Masukkan ke panci shabu berisi kuah tomyam panas. Masak 3–5 menit hingga mengapung dan matang sempurna. Kuahnya menjadi semakin gurih seiring semua bahan dimasak.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">✨</div>
+<div class="bahan-detail-text"><strong>Tips:</strong></div>
+</div>
+</div>
+</div>
+<!-- SAYUR -->
+<div class="prod-section-hdr mandatory-hdr">🥬 </div>
+<div class="bahan-card" id="vrow-sayur_basic">
+<div class="bahan-card-top">
+
+<div class="bahan-info">
+<div class="bahan-name">Sayur Basic</div>
+<div class="bahan-tagline">Selada + Bawang Bombay · Segar &amp; crunchy</div>
+<div class="bahan-price">Rp 20.000</div>
+</div>
+<div class="bahan-qty">
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyV('sayur_basic',-1)">−</button>
+<div class="qty-num" id="qty-sayur_basic">0</div>
+<button class="qty-btn" onclick="changeQtyV('sayur_basic',1)">+</button>
+</div>
+<button class="row-remove-btn" id="rmv-sayur_basic" type="button" onclick="removeV('sayur_basic')">Hapus</button>
+</div>
+</div>
+<button class="bahan-detail-toggle" onclick="toggleDetail('det-sayur_basic',this)">
+            ℹ️ Lihat Detail Produk <span class="arrow">▾</span>
+</button>
+<div class="bahan-detail-body" id="det-sayur_basic">
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🥬</div>
+<div class="bahan-detail-text"><strong>Isi:</strong> Selada segar dan bawang bombay iris. Sayur dasar yang wajib ada di setiap sesi grill.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🔥</div>
+<div class="bahan-detail-text"><strong>Cara pakai:</strong> Selada bisa digunakan sebagai pembungkus daging (wrap style ala Korea), atau dinikmati mentah sebagai penyegar. Bawang bombay bisa dipanggang hingga karamelisasi untuk rasa manis alami.</div>
+</div>
+</div>
+</div>
+<div class="bahan-card" id="vrow-sayur_komplit">
+<div class="bahan-card-top">
+
+<div class="bahan-info">
+<div class="bahan-name">Sayur Komplit + Enoki</div>
+<div class="bahan-tagline">Selada · Bombay · Enoki · Sawi · Lengkap!</div>
+<div class="bahan-price">Rp 25.000</div>
+</div>
+<div class="bahan-qty">
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyV('sayur_komplit',-1)">−</button>
+<div class="qty-num" id="qty-sayur_komplit">0</div>
+<button class="qty-btn" onclick="changeQtyV('sayur_komplit',1)">+</button>
+</div>
+<button class="row-remove-btn" id="rmv-sayur_komplit" type="button" onclick="removeV('sayur_komplit')">Hapus</button>
+</div>
+</div>
+<button class="bahan-detail-toggle" onclick="toggleDetail('det-sayur_komplit',this)">
+            ℹ️ Lihat Detail Produk <span class="arrow">▾</span>
+</button>
+<div class="bahan-detail-body" id="det-sayur_komplit">
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🌿</div>
+<div class="bahan-detail-text"><strong>Isi:</strong> Selada, Bawang Bombay, Jamur Enoki, dan Sawi. Paket sayur paling lengkap untuk pengalaman grill yang lebih kaya.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🍄</div>
+<div class="bahan-detail-text"><strong>Jamur Enoki:</strong> Jamur khas Jepang berbentuk panjang tipis seperti benang. Saat dipanggang, enoki menjadi slightly crispy di ujungnya dengan rasa umami yang ringan. Sangat enak dibungkus daging!</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">💡</div>
+<div class="bahan-detail-text"><strong>Tips:</strong> Bungkus sejumput enoki dengan beef slice, ikat dengan daun sawi, lalu panggang bersama — teknik ini disebut "Enoki Beef Roll" dan rasanya luar biasa!</div>
+</div>
+</div>
+</div>
+<!-- SAUS -->
+<div class="prod-section-hdr mandatory-hdr">🫙 </div>
+<div class="bahan-card" id="vrow-saus_bbq">
+<div class="bahan-card-top">
+
+<div class="bahan-info">
+<div class="bahan-name">Saus BBQ</div>
+<div class="bahan-tagline">Manis · Smoky · Klasik BBQ</div>
+<div class="bahan-price">120ml · Rp 15.000</div>
+</div>
+<div class="bahan-qty">
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyV('saus_bbq',-1)">−</button>
+<div class="qty-num" id="qty-saus_bbq">0</div>
+<button class="qty-btn" onclick="changeQtyV('saus_bbq',1)">+</button>
+</div>
+<button class="row-remove-btn" id="rmv-saus_bbq" type="button" onclick="removeV('saus_bbq')">Hapus</button>
+</div>
+</div>
+<button class="bahan-detail-toggle" onclick="toggleDetail('det-saus_bbq',this)">
+            ℹ️ Lihat Detail Produk <span class="arrow">▾</span>
+</button>
+<div class="bahan-detail-body" id="det-saus_bbq">
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🫙</div>
+<div class="bahan-detail-text"><strong>Profil rasa:</strong> Manis-gurih dengan sentuhan smoky yang khas. Saus racikan khusus Enjoy Grill dari tomat, molasses, dan bumbu rahasia kami.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🥩</div>
+<div class="bahan-detail-text"><strong>Cocok dengan:</strong> Semua jenis daging — terutama beef slice, sosis, dan chicken. Bisa dioleskan saat memanggang (glazing) atau dicocol setelah matang.</div>
+</div>
+</div>
+</div>
+<div class="bahan-card" id="vrow-saus_bp">
+<div class="bahan-card-top">
+
+<div class="bahan-info">
+<div class="bahan-name">Saus Black Pepper</div>
+<div class="bahan-tagline">Pedas · Gurih · Creamy · Ala steakhouse</div>
+<div class="bahan-price">120ml · Rp 15.000</div>
+</div>
+<div class="bahan-qty">
+<div class="qty-control">
+<button class="qty-btn" onclick="changeQtyV('saus_bp',-1)">−</button>
+<div class="qty-num" id="qty-saus_bp">0</div>
+<button class="qty-btn" onclick="changeQtyV('saus_bp',1)">+</button>
+</div>
+<button class="row-remove-btn" id="rmv-saus_bp" type="button" onclick="removeV('saus_bp')">Hapus</button>
+</div>
+</div>
+<button class="bahan-detail-toggle" onclick="toggleDetail('det-saus_bp',this)">
+            ℹ️ Lihat Detail Produk <span class="arrow">▾</span>
+</button>
+<div class="bahan-detail-body" id="det-saus_bp">
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🫙</div>
+<div class="bahan-detail-text"><strong>Profil rasa:</strong> Creamy dengan dominant rasa lada hitam yang pedas aromatik. Tekstur lebih kental dari saus BBQ — rasa ala fine dining steakhouse.</div>
+</div>
+<div class="bahan-detail-row">
+<div class="bahan-detail-icon">🥩</div>
+<div class="bahan-detail-text"><strong>Cocok dengan:</strong> Steak tenderloin, sirloin, dan saikoro — memang diciptakan untuk pasangan daging premium. Rasa pedasnya melengkapi rasa bold daging yang dipanggang.</div>
+</div>
+</div>
+</div>
+<div class="note-box secondary" style="margin-top:8px;">📦 <strong>Butuh bahan lebih banyak?</strong> Hubungi admin: <strong><a href="https://wa.me/6285771276910">085771276910</a><button class="copy-btn" data-copy-text="085771276910" type="button">Salin</button></strong></div>
+</div>
+<!-- ══════════════════════════════════════
+           SLIDE 3: DATA PELANGGAN
+      ══════════════════════════════════════ -->
+<div class="slide" id="slide-2">
+<div class="slide-step-badge">📋 Langkah 3 dari 4</div>
+<h3>Data Diri &amp; Jadwal</h3>
+<div class="subtitle">Isi data kamu biar kami bisa konfirmasi order ya 😊</div>
+<label>Nama Lengkap <span class="mandatory">*Wajib</span></label>
+<input id="custName" oninput="saveDraft();updateProgress()" placeholder="Misal: Budi Santoso" type="text"/>
+<label>Nomor WhatsApp <span class="mandatory">*Wajib</span></label>
+<div class="wa-wrap">
+<input id="custWA" oninput="validateWA();saveDraft();updateProgress()" placeholder="Contoh: 08123456789 atau 6281234..." style="padding-right:48px;" type="tel"/>
+<span class="wa-status" id="waStatus"></span>
+</div>
+<div class="success-note" id="waNoteOK">✅ Format nomor WA valid!</div>
+<label>Alamat Pengiriman <span class="mandatory">*Wajib</span></label>
+<textarea id="custAddr" oninput="saveDraft();updateProgress()" placeholder="Tulis alamat lengkap termasuk RT/RW, kelurahan, dan patokan rumah ya..."></textarea>
+<div class="date-time-row">
+<div>
+<label>📅 Tanggal Acara <span class="mandatory">*Wajib</span></label>
+<input id="custDate" min="" onchange="loadSlots();saveDraft();updateProgress()" type="date"/>
+</div>
+<div>
+<label>🕐 Pilih Slot Waktu <span class="mandatory">*Wajib</span></label>
+<div id="slotPlaceholder" style="color:var(--text-muted);font-size:13px;padding:10px 0;">↑ Pilih tanggal dulu</div>
+<div class="slot-grid" id="slotGrid" style="display:none"></div>
+<input id="custTime" type="hidden" value=""/>
+</div>
+</div>
+<div class="note-box secondary">💡 <strong>Area layanan:</strong> Jakarta · Kab. Jakarta Barat · Kab. Palmerah · Jakarta. Hubungi admin untuk area lainnya.</div>
+</div>
+<!-- ══════════════════════════════════════
+           SLIDE 4: PEMBAYARAN
+      ══════════════════════════════════════ -->
+<div class="slide" id="slide-3">
+<div class="slide-step-badge">💳 Langkah 4 dari 4</div>
+<h3>Pembayaran &amp; Konfirmasi</h3>
+<div class="subtitle">Pilih cara bayar, gunakan voucher, dan periksa ringkasan order kamu 🧾</div>
+<div class="payment-grid">
+<div class="payment-option" id="pay-qris" onclick="selectPayment('qris')">
+<div class="pay-icon">📱</div>
+<div class="pay-name">QRIS</div>
+<div class="pay-desc">GoPay · OVO · Dana · ShopeePay</div>
+</div>
+<div class="payment-option" id="pay-bca" onclick="selectPayment('bca')">
+<div class="pay-icon">🏦</div>
+<div class="pay-name">Transfer BCA</div>
+<div class="pay-desc">Bank BCA · Konfirmasi transfer</div>
+</div>
+</div>
+<div class="sec-details always-open"><div class="sec-summary-static">🎟️ Voucher (lihat detail)</div><div class="voucher-section">
+<div class="voucher-label">🎟️ Kode Voucher <span style="font-weight:400;color:var(--text-muted);font-size:12px;">(opsional)</span></div>
+<div class="voucher-wrap">
+<div class="voucher-input-box">
+<input class="voucher-input" id="voucherInput" maxlength="20" oninput="this.value=this.value.toUpperCase()" placeholder="Masukkan kode voucher..." type="text"/>
+</div>
+<button class="voucher-btn" onclick="applyVoucher()">Pakai</button>
+</div>
+<div class="voucher-feedback" id="voucherFeedback"></div>
+<div class="voucher-applied-chip" id="voucherAppliedChip">
+            🎉 <span id="voucherChipText">Voucher aktif</span>
+<button class="voucher-remove" onclick="removeVoucher()">✕</button>
+</div>
+</div></div>
+<details class="sec-details"><summary class="sec-summary">💰 Info DP (lihat detail)</summary><div class="sec-body"><div class="dp-info-box" id="dpInfoBox">
+<div style="font-size:13px;font-weight:700;color:var(--orange);margin-bottom:10px;">💰 Informasi Deposit (DP)</div>
+<div class="dp-row"><span class="dp-label">Total Belanja</span><span class="dp-value" id="dpTotal">Rp 0</span></div>
+<div class="dp-row" id="dpDiscountRow" style="display:none;"><span class="dp-label">Diskon Voucher</span><span class="dp-value" id="dpDiscount" style="color:var(--green);">-Rp 0</span></div>
+<div class="dp-row"><span class="dp-label">Total Setelah Diskon</span><span class="dp-value" id="dpAfterDiscount">Rp 0</span></div>
+<div class="dp-row"><span class="dp-label">DP 50% (dibayar sekarang)</span><span class="dp-value highlight" id="dpAmount">Rp 0</span></div>
+<div class="dp-row"><span class="dp-label">Pelunasan (saat delivery)</span><span class="dp-value" id="dpSisa">Rp 0</span></div>
+<div style="font-size:11px;color:var(--text-muted);margin-top:8px;">* DP dikonfirmasi via bukti transfer ke admin WA · Belum termasuk ongkir</div>
+</div></div></details>
+<div class="summary-card">
+<div class="summary-title">
+            🧾 Ringkasan Order
+            <span class="order-id-chip" id="summaryOrderId"></span>
+</div>
+<div id="summaryItems"><div class="summary-row"><span class="summary-label">Belum ada item...</span><span></span></div></div>
+<div class="summary-total">
+<span class="total-label">Total Bayar</span>
+<span class="total-value" id="totalPrice">Rp 0</span>
+</div>
+<div style="font-size:11px;opacity:0.5;margin-top:6px;">* Belum termasuk ongkos kirim ojek online</div>
+</div>
+<label style="margin-bottom:8px;">📝 Catatan Tambahan <span style="color:var(--text-muted);font-weight:400;">(opsional)</span></label>
+<textarea id="custNote" oninput="saveDraft()" placeholder="Misal: tidak pakai lemak banyak, minta kompor ekstra, dll..." style="margin-bottom:20px;"></textarea>
+<div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text-muted);line-height:1.7;">Order dikonfirmasi admin setelah pesan diterima 🙏🔥</div>
+</div>
+</div><!-- end slide-track -->
+</div><!-- end slide-viewport -->
+</div><!-- end main -->
+<!-- Bottom tabbar (marketplace-style) -->
+<div class="bottom-tabbar" id="bottomTabbar">
+<div class="bottom-tabbar-inner">
+<button class="tab-btn" id="tabPesanan" type="button">
+<span class="tab-ico">🧾</span>
+<span class="tab-text">
+<span class="tab-title">Pesanan</span>
+<span class="tab-sub" id="tabPesananTotal">Rp 0</span>
+</span>
+</button>
+<button class="tab-btn" id="tabPorsi" type="button">
+<span class="tab-ico">👥</span>
+<span class="tab-text">
+<span class="tab-title">Porsi</span>
+<span class="tab-sub" id="tabPorsiVal">–</span>
+</span>
+</button>
+
+<button class="tab-btn tab-back" id="tabBack" type="button" aria-label="Kembali">
+  <span class="tab-ico">⬅️</span>
+  <span class="tab-text">
+    <span class="tab-title">Kembali</span>
+    <span class="tab-sub">Step sebelumnya</span>
+  </span>
+</button>
+
+
+<button class="tab-btn tab-next" id="tabNext" type="button" aria-label="Lanjut">
+<span class="next-warn" id="nextWarn" aria-live="polite"></span>
+<span class="tab-ico">➡️</span>
+<span class="tab-text">
+<span class="tab-title">Lanjut</span>
+<span class="tab-sub" id="tabNextLabel">Pilih Bahan →</span>
+</span>
+</button>
+</div>
+</div>
+<div aria-hidden="true" class="cart-backdrop" id="cartBackdrop"></div>
+<div aria-hidden="true" class="floating-cart" id="floatingCart">
+<div class="floating-cart-card">
+<div class="floating-cart-head" id="floatingCartHead">
+<span class="fc-title">🧾 Pesanan</span>
+<span class="fc-total" id="fcTotal">Rp 0</span>
+<button aria-label="Tutup pesanan" class="fc-close" id="fcClose" type="button">Tutup ✕</button>
+</div>
+<div class="floating-cart-body" id="floatingCartBody">
+<div class="fc-section" id="fcPaket">
+<div class="fc-section-title">📦 Pesanan Paket</div>
+<div id="fcPaketItems"></div>
+</div><div class="fc-items" id="fcItems"></div>
+
+</div>
+</div>
+</div>
+<!-- Porsi sheet (dibuka dari tab bawah) -->
+<div aria-hidden="true" class="porsi-sheet" id="porsiSheet">
+<div class="porsi-sheet-card">
+<div class="porsi-sheet-head">
+<span class="porsi-title">👥 Estimasi Porsi</span>
+<button aria-label="Tutup porsi" class="porsi-close" id="porsiClose" type="button">Tutup ✕</button>
+</div>
+<div class="porsi-sheet-body">
+<div class="porsi-est" style="display:block;margin:0;">
+<div class="porsi-est-row">
+<div class="porsi-est-ico">🧑‍🤝‍🧑</div>
+<div>
+<div class="porsi-est-title">Live (paket + add-ons)</div>
+<div class="porsi-est-sub" style="margin-top:2px;">Update otomatis saat kamu pilih paket / add-ons.</div>
+<div class="porsi-est-pill" id="porsiSheetPill">👥 <b>–</b> orang</div>
+</div>
+</div>
+</div>
+<div style="margin-top:10px;font-size:11px;color:rgba(0,0,0,.55);line-height:1.6;">
+        Tips: estimasi ini konservatif (±200–250g protein/orang) dan bisa berubah sesuai add-ons.
+      </div>
+</div>
+</div>
+</div>
+<div class="toast" id="toast" style="display:none"></div>
+<!-- Lightbox untuk lihat foto detail -->
+<div aria-hidden="true" class="img-lightbox" id="imgLightbox">
+<div aria-label="Foto detail" aria-modal="true" class="img-lightbox-card" role="dialog">
+<div class="img-lightbox-head">
+<div class="img-lightbox-title" id="imgLightboxTitle">Foto</div>
+<button class="img-lightbox-close" id="imgLightboxClose" type="button">Tutup ✕</button>
+</div>
+<div aria-label="Foto" class="img-lightbox-img" id="imgLightboxImg" role="img">🖼️</div>
+<div class="img-lightbox-note">Tip: tap area gelap untuk menutup.</div>
+</div>
+</div>
+<script>
+// ─── FLOATERS ─────────────────────────────────────────────
+const floaterEmojis = ['🔥','🍖','🥩','🍗','🌭','🥬','🫙','🍲','✨'];
+
+// ─── IMAGE LIGHTBOX (klik ikon beef) ───────────────────────
+const imgLightbox = document.getElementById('imgLightbox');
+const imgLightboxImg = document.getElementById('imgLightboxImg');
+const imgLightboxTitle = document.getElementById('imgLightboxTitle');
+const imgLightboxClose = document.getElementById('imgLightboxClose');
+
+function openLightbox(src, title){
+  imgLightboxImg.src = src;
+  imgLightboxImg.alt = title || 'Foto';
+  // pastikan tidak ada teks brand di label
+  if(title){ imgLightboxImg.alt = title; }
+  imgLightboxTitle.textContent = title || 'Foto';
+  imgLightbox.classList.add('show');
+  imgLightbox.setAttribute('aria-hidden','false');
+}
+function closeLightbox(){
+  imgLightbox.classList.remove('show');
+  imgLightbox.setAttribute('aria-hidden','true');
+  // reset src biar hemat memori (hindari request ke halaman)
+  imgLightboxImg.removeAttribute('src');
+}
+imgLightboxClose.addEventListener('click', closeLightbox);
+imgLightbox.addEventListener('click', (e)=>{ if(e.target === imgLightbox) closeLightbox(); });
+document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape' && imgLightbox.classList.contains('show')) closeLightbox(); });
+
+// Pasang handler untuk ikon Beef Slice (tap untuk zoom)
+function bindBeefIconZoom(){
+  const iconLemak = document.querySelector('#vrow-beef_lemak .ico-beef-us');
+  if(iconLemak){
+    iconLemak.addEventListener('click', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      iconLemak.classList.remove('tap-pop');
+      void iconLemak.offsetWidth;
+      iconLemak.classList.add('tap-pop');
+      openLightbox(iconLemak.getAttribute('src'), 'US Lemak');
+    });
+  }
+
+  const iconLowFat = document.querySelector('#vrow-beef_nlemak .ico-beef-us-lowfat');
+  if(iconLowFat){
+    iconLowFat.addEventListener('click', (e)=>{
+      e.preventDefault();
+      e.stopPropagation();
+      iconLowFat.classList.remove('tap-pop');
+      void iconLowFat.offsetWidth;
+      iconLowFat.classList.add('tap-pop');
+      openLightbox(iconLowFat.getAttribute('src'), 'US Low Fat');
+    });
+  }
+}
+// jalankan setelah DOM siap
+setTimeout(bindBeefIconZoom, 0);
+const floatersCont = document.getElementById('floaters');
+for (let i = 0; i < 14; i++) {
+  const f = document.createElement('div');
+  f.className = 'floater';
+  f.textContent = floaterEmojis[Math.floor(Math.random() * floaterEmojis.length)];
+  f.style.left = Math.random() * 100 + '%';
+  f.style.animationDuration = (8 + Math.random() * 12) + 's';
+  f.style.animationDelay = (-Math.random() * 20) + 's';
+  f.style.fontSize = (1.5 + Math.random() * 2) + 'rem';
+  floatersCont.appendChild(f);
+}
+
+// ─── ORDER ID ─────────────────────────────────────────────
+function generateOrderId() {
+  const now = new Date();
+  const d = now.toLocaleDateString('id-ID',{year:'2-digit',month:'2-digit',day:'2-digit'}).replace(/\//g,'');
+  const rand = Math.floor(Math.random() * 900) + 100;
+  return 'EG-' + d + '-' + rand;
+}
+let orderId = localStorage.getItem('eg_order_id') || generateOrderId();
+localStorage.setItem('eg_order_id', orderId);
+document.getElementById('orderIdBadge').textContent = '📋 ' + orderId;
+document.getElementById('summaryOrderId').textContent = orderId;
+
+// ─── STEP INDICATORS ──────────────────────────────────────
+const stepConfig = [
+  { label:'Alat/Paket', icon:'📦' },
+  { label:'Bahan', icon:'🥩' },
+  { label:'Data Diri', icon:'📋' },
+  { label:'Bayar', icon:'💳' },
+];
+const dotsContainer = document.getElementById('stepDots');
+const labelsContainer = document.getElementById('stepLabels');
+stepConfig.forEach((s, i) => {
+  if (i > 0) {
+    const line = document.createElement('div');
+    line.className = 'step-line'; line.id = 'line-' + i;
+    dotsContainer.appendChild(line);
+  }
+  const dot = document.createElement('div');
+  dot.className = 'step-dot' + (i === 0 ? ' active' : ' locked');
+  dot.id = 'dot-' + i; dot.innerHTML = s.icon;
+  dotsContainer.appendChild(dot);
+  const lbl = document.createElement('div');
+  lbl.className = 'step-lbl' + (i === 0 ? ' active' : '');
+  lbl.id = 'lbl-' + i; lbl.textContent = s.label;
+  labelsContainer.appendChild(lbl);
+});
+
+// ─── SLIDER ───────────────────────────────────────────────
+let currentSlide = 0;
+let maxSlideReached = 0;
+const TOTAL_SLIDES = 4;
+const track = document.getElementById('slideTrack');
+
+function updateNextTab(){
+  const el = document.getElementById('tabNextLabel');
+  if(!el) return;
+  const labels = [
+    'Pilih Bahan →',
+    'Isi Data →',
+    'Konfirmasi →',
+    'Kirim WA'
+  ];
+  el.textContent = labels[currentSlide] || 'Lanjut →';
+}
+
+function updateNextChecklist(){
+  const box = document.getElementById('nextChecklist');
+  if(!box) return;
+
+  function row(ok, text){
+    return `<div class="row"><div class="ico ${ok?'ok':'no'}">${ok?'✅':'⬜'}</div><div>${text}</div></div>`;
+  }
+
+  let html = '';
+  let show = true;
+
+  if(currentSlide === 0){
+    if(orderMode === 'paket'){
+      const ok = paketSelectedTotalQty() > 0;
+      html += row(ok, 'Pilih minimal 1 paket');
+    } else {
+      const ok = (qtyAlat.grill + qtyAlat.shabu + qtyAlat.shabuonly) > 0;
+      html += row(ok, 'Pilih minimal 1 alat masak');
+    }
+  }
+  else if(currentSlide === 1){
+    if(orderMode === 'paket'){
+      // add-ons opsional
+      html += row(true, 'Add-ons opsional (boleh skip)');
+    } else {
+      const beefTotal = qtyV.beef_lemak + qtyV.beef_nlemak + qtyV.beef_lemak_aus + qtyV.saikoro + qtyV.steak_tenderloin + qtyV.steak_sirloin;
+      html += row(beefTotal>0, 'Beef/Steak min. 1');
+      html += row((qtyV.chicken_dada + qtyV.chicken_paha)>0, 'Chicken min. 1');
+      html += row((qtyV.sosis_sapi + qtyV.sosis_ayam)>0, 'Sosis min. 1');
+      html += row((qtyV.sayur_basic + qtyV.sayur_komplit)>0, 'Sayur min. 1');
+      html += row((qtyV.saus_bbq + qtyV.saus_bp)>0, 'Saus min. 1');
+    }
+  }
+  else if(currentSlide === 2){
+    const name = document.getElementById('custName').value.trim();
+    const wa   = document.getElementById('custWA').value.trim();
+    const addr = document.getElementById('custAddr').value.trim();
+    const date = document.getElementById('custDate').value;
+    const time = document.getElementById('custTime').value;
+    html += row(!!name, 'Nama');
+    html += row(!!wa && validateWA(), 'Nomor WA valid');
+    html += row(!!addr, 'Alamat');
+    html += row(!!date, 'Tanggal');
+    html += row(!!time, 'Slot waktu');
+  }
+  else if(currentSlide === 3){
+    html += row(!!payment, 'Pilih metode pembayaran');
+    show = !payment; // kalau sudah bayar, ga perlu tampil checklist
+  }
+
+  box.innerHTML = html;
+  box.classList.toggle('show', show);
+}
+
+function goToSlide(idx) {
+  if (idx === currentSlide) return;
+  currentSlide = idx;
+  if (idx > maxSlideReached) maxSlideReached = idx;
+  track.style.transform = 'translateX(-' + (currentSlide * 100) + '%)';
+  updateStepDots();
+  rewireDots();
+  updateProgress();
+  if (idx === 3) { updateSummary(); updateDPInfo(); }
+  updateNextTab();
+  
+  setTimeout(() => window.scrollTo({top:0,behavior:'smooth'}), 100);
+}
+function goNext(fromSlide) {
+  if (!validateSlide(fromSlide)) return;
+  const nextSlide = fromSlide + 1;
+  if (nextSlide > maxSlideReached) maxSlideReached = nextSlide;
+  rewireDots();
+  goToSlide(nextSlide);
+}
+function goPrev(fromSlide) { goToSlide(fromSlide - 1); }
+
+function updateStepDots() {
+  for (let i = 0; i < TOTAL_SLIDES; i++) {
+    const dot = document.getElementById('dot-' + i);
+    const lbl = document.getElementById('lbl-' + i);
+    dot.classList.remove('active','done','locked');
+    lbl.classList.remove('active','done');
+    if (i === currentSlide) { dot.classList.add('active'); lbl.classList.add('active'); }
+    else if (i <= maxSlideReached) { dot.classList.add('done'); lbl.classList.add('done'); }
+    else dot.classList.add('locked');
+    if (i > 0) document.getElementById('line-' + i).classList.toggle('done', i <= maxSlideReached);
+  }
+}
+function rewireDots() {
+  for (let i = 0; i < TOTAL_SLIDES; i++) {
+    const dot = document.getElementById('dot-' + i);
+    dot.onclick = () => {
+      if (i === currentSlide) return;
+      if (i < currentSlide || i <= maxSlideReached) { goToSlide(i); return; }
+      showToast('⚠️ Selesaikan langkah ' + (currentSlide + 1) + ' dulu ya!');
+    };
+  }
+}
+
+// ─── ORDER MODE & PAKET ───────────────────────────────────
+let orderMode = 'paket'; // 'paket' or 'custom'
+// Paket bisa dipilih lebih dari 1 (qty)
+const paketQty = { g1:0,g2:0,g3:0,g4:0,s1:0,s2:0,s3:0,s4:0 };
+function paketMaxQty(id){ return (id.endsWith('1') || id.endsWith('2')) ? 10 : 5; }
+function paketSelectedTotalQty(){ return Object.values(paketQty).reduce((a,b)=>a+b,0); }
+function paketSelectedIds(){ return Object.keys(paketQty).filter(k=>paketQty[k]>0); }
+
+
+const paketData = {
+  g1: { name:'Paket Grill 1', price:189000, type:'grill', hasShabu:false },
+  g2: { name:'Paket Grill 2', price:359000, type:'grill', hasShabu:false },
+  g3: { name:'Paket Grill 3', price:599000, type:'grill', hasShabu:false },
+  g4: { name:'Paket Grill 4', price:799000, type:'grill', hasShabu:false },
+  s1: { name:'Shabu & Grill 1', price:269000, type:'shabu', hasShabu:true },
+  s2: { name:'Shabu & Grill 2', price:439000, type:'shabu', hasShabu:true },
+  s3: { name:'Shabu & Grill 3', price:749000, type:'shabu', hasShabu:true },
+  s4: { name:'Shabu & Grill 4', price:999000, type:'shabu', hasShabu:true },
+};
+
+// ─── ESTIMASI PORSI (BERDASARKAN RISET) ───────────────────
+// Referensi angka porsi daging mentah per orang:
+// - Prasmanan/buffet: 200–250g per orang (TokoDagingKita)
+// - BBQ/outdoor kasual: 250–350g per orang (TokoDagingKita)
+// Untuk menjaga ekspektasi customer, kita pakai hitung konservatif berbasis protein.
+// Asumsi konsumsi protein per orang untuk BBQ/Shabu rumahan:
+// ~250–350g protein mentah/orang (lebih realistis untuk acara makan ramai).
+const PORSI_GRAM_PER_ORANG_MIN = 250; // kondisi wajar (lebih banyak side)
+const PORSI_GRAM_PER_ORANG_MAX = 350; // porsi besar (BBQ biasanya lebih banyak)
+
+// Total gram protein utama per 1 paket (dari list paket di UI)
+const paketProteinGram = {
+  g1: 250+250+250,
+  g2: 1000+250+250,
+  g3: 2000+500+500,
+  g4: 3250+500+500,
+  s1: 250+250+250+250, // beef+ayam+sosis+suki
+  s2: 1000+250+250+250,
+  s3: 2000+500+500+500,
+  s4: 3250+500+500+1000,
+};
+
+// Target porsi per paket (manual, sesuai arahan kamu)
+// Catatan: ini porsi *estimasi* (tergantung selera, add-ons, side, dll.)
+const paketPaxManual = {
+  g1: {min:2,max:3},
+  g2: {min:4,max:6},
+  g3: {min:8,max:10},
+  g4: {min:12,max:14},
+  s1: {min:3,max:4},
+  s2: {min:6,max:8},
+  s3: {min:10,max:12},
+  s4: {min:14,max:18},
+};
+
+// Add-ons yang dihitung ke porsi (hanya yang protein/utama)
+const addonProteinGram = {
+  beef_lemak:250,
+  beef_nlemak:250,
+  beef_lemak_aus:500,
+  chicken_dada:250,
+  chicken_paha:250,
+  sosis_sapi:250,
+  sosis_ayam:250,
+  steam:500,
+  saikoro:250,
+  steak_tenderloin:200,
+  steak_sirloin:200,
+};
+
+function paxRangeFromGram(gram){
+  if(!gram || gram <= 0) return {min:0,max:0};
+  const minPax = Math.max(1, Math.floor(gram / PORSI_GRAM_PER_ORANG_MAX));
+  const maxPax = Math.max(1, Math.floor(gram / PORSI_GRAM_PER_ORANG_MIN));
+  return {min:minPax, max:Math.max(minPax, maxPax)};
+}
+
+function formatPaxRange(r){
+  if(!r || r.min === 0) return '–';
+  return (r.min === r.max) ? String(r.min) : (r.min + '–' + r.max);
+}
+
+function sumSelectedPaketProteinGram(){
+  let gram = 0;
+  Object.keys(paketQty).forEach(id => {
+    const q = paketQty[id] || 0;
+    if(q > 0) gram += (paketProteinGram[id] || 0) * q;
+  });
+  return gram;
+}
+
+function sumAddonProteinGram(){
+  let gram = 0;
+  Object.keys(addonProteinGram).forEach(k => {
+    const q = qtyV?.[k] || 0;
+    if(q > 0) gram += addonProteinGram[k] * q;
+  });
+  return gram;
+}
+
+function updatePorsiUI(){
+  // badge per paket (per 1 paket) — pakai mapping manual
+  ['g1','g2','g3','g4','s1','s2','s3','s4'].forEach(id => {
+    const el = document.getElementById('pax-' + id);
+    if(!el) return;
+    const r = paketPaxManual[id] || paxRangeFromGram(paketProteinGram[id] || 0);
+    el.textContent = formatPaxRange(r);
+  });
+
+  const box1 = document.getElementById('porsiPaketBox');
+  const pill1 = document.getElementById('porsiPaketPill');
+  const box2 = document.getElementById('porsiBahanBox');
+  const pill2 = document.getElementById('porsiBahanPill');
+
+  // Live porsi:
+  // - Mode paket: jumlahkan range manual per paket + konversi add-ons (gram -> pax)
+  // - Mode custom: pakai konversi gram -> pax seperti sebelumnya
+  let totalMin = 0, totalMax = 0;
+  let totalGram = 0; // dipakai untuk kondisi UI (0 = belum ada pesanan)
+
+  const addonGram = sumAddonProteinGram();
+  const addonR = paxRangeFromGram(addonGram);
+
+  if(orderMode === 'paket'){
+    paketSelectedIds().forEach(id => {
+      const q = paketQty[id] || 0;
+      const r = paketPaxManual[id] || paxRangeFromGram(paketProteinGram[id] || 0);
+      totalMin += (r.min||0) * q;
+      totalMax += (r.max||0) * q;
+    });
+    totalMin += addonR.min||0;
+    totalMax += addonR.max||0;
+
+    // totalGram hanya untuk cek "kosong/tidak" (bukan untuk hitung range manual)
+    totalGram = sumSelectedPaketProteinGram() + addonGram;
+  } else {
+    const baseGram = 0;
+    totalGram = baseGram + addonGram;
+    const r = paxRangeFromGram(totalGram);
+    totalMin = r.min; totalMax = r.max;
+  }
+
+  const r = {min: totalMin, max: totalMax};
+  const txt = formatPaxRange(r);
+  const pillHTML = '👥 <b>' + txt + '</b> orang' + (addonGram>0 ? ' <span style="color:#1A7A3C;font-weight:900;">(+ add-ons)</span>' : '');
+
+  // Update TAB + SHEET porsi (marketplace-style)
+  const tabPorsiVal = document.getElementById('tabPorsiVal');
+  const porsiSheetPill = document.getElementById('porsiSheetPill');
+  if(tabPorsiVal) tabPorsiVal.textContent = (totalGram===0) ? '–' : (txt + ' org');
+  if(porsiSheetPill) porsiSheetPill.innerHTML = (totalGram===0) ? '👥 <b>–</b> orang' : pillHTML;
+
+  // Box di langkah 1 (paket)
+  if(box1 && pill1){
+    if(totalGram === 0){ box1.classList.remove('show'); }
+    else {
+      box1.classList.add('show');
+      pill1.innerHTML = pillHTML;
+      box1.classList.remove('porsi-bounce');
+      void box1.offsetWidth;
+      box1.classList.add('porsi-bounce');
+    }
+  }
+
+  // Box di langkah 2 (bahan)
+  if(box2 && pill2){
+    if(totalGram === 0){ box2.classList.remove('show'); }
+    else {
+      box2.classList.add('show');
+      pill2.innerHTML = pillHTML;
+      box2.classList.remove('porsi-bounce');
+      void box2.offsetWidth;
+      box2.classList.add('porsi-bounce');
+    }
+  }
+}
+
+function ensurePaketQtyUI(){
+  Object.keys(paketData).forEach(id=>{
+    const card=document.getElementById('paket-'+id);
+    if(!card) return;
+    let wrap=card.querySelector('.paket-qty-ui');
+    if(!wrap){
+      wrap=document.createElement('div');
+      wrap.className='paket-qty-ui';
+      wrap.innerHTML = `
+        <button type="button" class="qty-mini" data-act="minus" data-id="${id}">−</button>
+        <span class="qty-mini-num" id="qty-paket-${id}">0</span>
+        <button type="button" class="qty-mini" data-act="plus" data-id="${id}">+</button>
+      `;
+      card.appendChild(wrap);
+      wrap.addEventListener('click',(ev)=>{
+        ev.stopPropagation();
+        const btn=ev.target.closest('.qty-mini');
+        if(!btn) return;
+        const pid=btn.getAttribute('data-id');
+        const act=btn.getAttribute('data-act');
+        changePaketQty(pid, act==='plus' ? 1 : -1);
+      });
+    }
+  });
+}
+
+function renderPaketCards(){
+  ensurePaketQtyUI();
+  Object.keys(paketData).forEach(id=>{
+    const card=document.getElementById('paket-'+id);
+    const num=document.getElementById('qty-paket-'+id);
+    if(num) num.textContent = paketQty[id];
+    if(card) card.classList.toggle('selected', paketQty[id] > 0);
+  });
+  // update badge porsi per paket
+  if (typeof updatePorsiUI === 'function') updatePorsiUI();
+}
+
+function changePaketQty(id, delta){
+  // Jangan biarkan tombol minus menghapus item (pakai tombol Hapus terpisah)
+  const cur = paketQty[id]||0;
+  if(delta < 0 && cur <= 1){ showToast('ℹ️ Pakai tombol Hapus untuk menghapus paket'); return; }
+  const next = Math.max(0, (paketQty[id]||0) + delta);
+  const max = paketMaxQty(id);
+  if(next > max){ showToast('⚠️ Maksimal ' + max + ' paket untuk ' + paketData[id].name); return; }
+  paketQty[id]=next;
+  renderPaketCards();
+  updateSteamLock();
+  updateSummary();
+  updateProgress();
+  updateFloatingCart();
+  // estimasi porsi
+  if (typeof updatePorsiUI === 'function') updatePorsiUI();
+  saveDraft();
+}
+
+
+function setMode(mode) {
+  orderMode = mode;
+  document.body.classList.toggle('mode-paket', mode === 'paket');
+  document.body.classList.toggle('mode-custom', mode === 'custom');
+  document.getElementById('mode-paket').classList.toggle('active', mode === 'paket');
+  document.getElementById('mode-custom').classList.toggle('active', mode === 'custom');
+  document.getElementById('section-paket').style.display = mode === 'paket' ? 'block' : 'none';
+  document.getElementById('section-custom').style.display = mode === 'custom' ? 'block' : 'none';
+
+  // update bahan slide based on mode
+  const paketNote = document.getElementById('paketModeNote');
+  if (mode === 'paket') {
+    paketNote.style.display = 'block';
+    // In paket mode, bahan is optional add-ons
+    ['beef-mandatory','chicken-mandatory','sosis-mandatory','sayur-mandatory','saus-mandatory'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.display = 'none'; }
+    });
+  } else {
+    paketNote.style.display = 'none';
+    ['beef-mandatory','chicken-mandatory','sosis-mandatory','sayur-mandatory','saus-mandatory'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.style.display = 'inline'; }
+    });
+    Object.keys(paketQty).forEach(k => paketQty[k] = 0);
+    renderPaketCards();
+  }
+  updateSteamLock();
+  updateSummary();
+  updateProgress();
+  // estimasi porsi
+  if (typeof updatePorsiUI === 'function') updatePorsiUI();
+  saveDraft();
+}
+
+let currentPaketTab = 'grill';
+function setPaketTab(tab) {
+  currentPaketTab = tab;
+  document.querySelectorAll('.paket-tab').forEach((t,i) => {
+    t.classList.toggle('active', (tab === 'grill' && i===0) || (tab === 'shabu' && i===1));
+  });
+  document.getElementById('tab-grill').style.display = tab === 'grill' ? 'grid' : 'none';
+  document.getElementById('tab-shabu').style.display = tab === 'shabu' ? 'grid' : 'none';
+}
+
+function selectPaket(id) {
+  // Klik kartu = tambah qty 1
+  changePaketQty(id, 1);
+  showToast('✅ ' + paketData[id].name + ' +' + 1);
+}
+
+
+// ─── SLOT WAKTU ───────────────────────────────────────────
+let selectedSlot = '';
+function getSlotAvailability(dateStr) {
+  const hash = dateStr.split('').reduce((a,c) => a + c.charCodeAt(0), 0);
+  return [
+    { time:'08:00', label:'Pagi', avail: (hash % 7 !== 1) },
+    { time:'10:00', label:'Siang awal', avail: (hash % 5 !== 2) },
+    { time:'13:00', label:'Siang', avail: (hash % 3 !== 0) },
+    { time:'15:00', label:'Sore', avail: true },
+    { time:'17:00', label:'Sore akhir', avail: (hash % 4 !== 1) },
+    { time:'19:00', label:'Malam', avail: (hash % 6 !== 3) },
+  ];
+}
+function loadSlots() {
+  const dateVal = document.getElementById('custDate').value;
+  if (!dateVal) return;
+  const slots = getSlotAvailability(dateVal);
+  const grid = document.getElementById('slotGrid');
+  document.getElementById('slotPlaceholder').style.display = 'none';
+  grid.style.display = 'grid'; grid.innerHTML = '';
+  slots.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = 'slot-btn' + (s.avail ? '' : ' disabled');
+    btn.innerHTML = '<span class="slot-time">'+s.time+'</span><span class="slot-avail">'+(s.avail?'✅ Tersedia':'❌ Penuh')+'</span>';
+    if (!s.avail) { btn.disabled = true; }
+    else {
+      btn.onclick = () => {
+        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedSlot = s.time;
+        document.getElementById('custTime').value = s.time;
+        updateProgress(); saveDraft();
+      };
+    }
+    if (selectedSlot === s.time && s.avail) btn.classList.add('selected');
+    grid.appendChild(btn);
+  });
+}
+
+// ─── WA VALIDATION ────────────────────────────────────────
+function validateWA() {
+  const raw = document.getElementById('custWA').value.trim();
+  const statusEl = document.getElementById('waStatus');
+  const noteOK = document.getElementById('waNoteOK');
+  const re = /^(08\d{8,11}|628\d{8,11}|8\d{8,11})$/;
+  const clean = raw.replace(/[\s\-\+]/g,'');
+  if (!clean) { statusEl.textContent = ''; noteOK.classList.remove('show'); return false; }
+  if (re.test(clean)) { statusEl.textContent = '✅'; noteOK.classList.add('show'); return true; }
+  else { statusEl.textContent = '❌'; noteOK.classList.remove('show'); return false; }
+}
+
+// ─── TOGGLE DETAIL ────────────────────────────────────────
+function toggleDetail(id, btn) {
+  const body = document.getElementById(id);
+  const isOpen = body.classList.contains('open');
+  body.classList.toggle('open', !isOpen);
+  btn.classList.toggle('open', !isOpen);
+}
+
+// Helper: aman untuk cek value
+function safe(v){ return (v && String(v).trim()) ? String(v).trim() : ''; }
+
+// ─── VALIDATE ─────────────────────────────────────────────
+function validateSlide(idx) {
+  clearNeedCheckout();
+
+  if (idx === 0) {
+    if (orderMode === 'paket') {
+      if (paketSelectedTotalQty() === 0) {
+        showToast('⚠️ Pilih paket dulu ya!');
+        const section = document.getElementById('section-paket');
+        const grid = document.querySelector('#tab-grill:not([style*="display:none"])') || document.querySelector('#tab-shabu:not([style*="display:none"])') || document.querySelector('.paket-grid');
+        markNeed(section); markNeed(grid);
+        focusNeed(grid || section);
+        return false;
+      }
+    } else {
+      if (qtyAlat.grill + qtyAlat.shabu + qtyAlat.shabuonly === 0) {
+        showToast('⚠️ Pilih minimal 1 alat masak!');
+        const sec = document.getElementById('section-custom');
+        const r1 = document.getElementById('row-grill');
+        const r2 = document.getElementById('row-shabu');
+        const r3 = document.getElementById('row-shabuonly');
+        [sec,r1,r2,r3].forEach(markNeed);
+        focusNeed(r1 || sec);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  if (idx === 1) {
+    // Mode paket: bahan/add-ons opsional (boleh skip)
+    if (orderMode === 'paket') return true;
+
+    // Mode custom: wajib pilih minimal 1 bahan
+    const totalBahan = Object.values(qtyV).reduce((a,b)=>a+(b||0),0);
+    if (totalBahan === 0) {
+      showToast('⚠️ Pilih minimal 1 bahan / add-ons dulu ya!');
+      const first = document.querySelector('.bahan-card') || document.querySelector('.product-row') || document.getElementById('section-custom');
+      if(first) { markNeed(first); focusNeed(first); }
+      return false;
+    }
+    return true;
+  }
+
+
+
+  if (idx === 2) {
+    const name = document.getElementById('custName').value.trim();
+    const wa   = document.getElementById('custWA').value.trim();
+    const addr = document.getElementById('custAddr').value.trim();
+    const date = document.getElementById('custDate').value;
+    const time = document.getElementById('custTime').value;
+    if (!name) { showToast('⚠️ Nama wajib diisi!'); markNeed(document.getElementById('custName')); focusNeed(document.getElementById('custName')); return false; }
+    if (!wa)   { showToast('⚠️ Nomor WA wajib diisi!'); markNeed(document.getElementById('custWA')); focusNeed(document.getElementById('custWA')); return false; }
+    if (!validateWA()) { showToast('⚠️ Format nomor WA tidak valid!'); markNeed(document.getElementById('custWA')); focusNeed(document.getElementById('custWA')); return false; }
+    if (!addr) { showToast('⚠️ Alamat wajib diisi!'); markNeed(document.getElementById('custAddr')); focusNeed(document.getElementById('custAddr')); return false; }
+    if (!date) { showToast('⚠️ Tanggal acara wajib diisi!'); markNeed(document.getElementById('custDate')); focusNeed(document.getElementById('custDate')); return false; }
+    const today = new Date(); today.setHours(0,0,0,0);
+    if (new Date(date) < today) { showToast('⚠️ Tanggal tidak boleh di masa lalu!'); markNeed(document.getElementById('custDate')); focusNeed(document.getElementById('custDate')); return false; }
+    if (!time) { showToast('⚠️ Pilih slot waktu dulu ya!'); markNeed(document.getElementById('custTime')); focusNeed(document.getElementById('custTime')); return false; }
+    return true;
+  }
+
+
+
+  if (idx === 3) {
+    if (!payment) { showToast('⚠️ Pilih metode pembayaran dulu!'); focusNeed(document.getElementById('pay-qris') || document.getElementById('pay-bca')); return false; }
+    return true;
+  }
+
+  return true;
+}
+
+function hasShabuMode() {
+  if (orderMode === 'paket' && paketSelectedTotalQty() > 0) return paketSelectedIds().some(id=>paketData[id].hasShabu);
+  return qtyAlat.shabu > 0 || qtyAlat.shabuonly > 0;
+}
+
+// ─── ALAT MASAK (custom mode) ─────────────────────────────
+// Harga alat (custom mode) — sinkron dengan UI
+const pricesAlat = { grill:70000, shabu:85000, shabuonly:75000 };
+const qtyAlat = { grill:0, shabu:0, shabuonly:0 };
+const MAX = 10;
+
+// tombol hapus untuk alat di langkah 1 (custom)
+['grill','shabu','shabuonly'].forEach(ensureAlatRemoveUI);
+
+function removeAlat(item){
+  if(!qtyAlat.hasOwnProperty(item)) return;
+  qtyAlat[item] = 0;
+  const qtyEl = document.getElementById('qty-' + item);
+  if(qtyEl) qtyEl.textContent = 0;
+  const row = document.getElementById('row-' + item);
+  if (row) row.classList.remove('active');
+  const rm = document.getElementById('rm-' + item);
+  if(rm) rm.classList.remove('show');
+  updateSteamLock();
+  updatePorsiHint();
+  updateSummary();
+  updateProgress();
+  updateFloatingCart();
+  saveDraft();
+  showToast('🗑️ Alat dihapus');
+}
+
+function ensureAlatRemoveUI(item){
+  const row = document.getElementById('row-' + item);
+  if(!row) return;
+  let btn = document.getElementById('rm-' + item);
+  if(btn) return;
+  btn = document.createElement('button');
+  btn.type = 'button';
+  btn.id = 'rm-' + item;
+  btn.className = 'row-remove-btn';
+  btn.textContent = 'Hapus';
+  btn.classList.remove('show');
+  btn.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); removeAlat(item); });
+  const qc = row.querySelector('.qty-control');
+  if(qc) qc.insertAdjacentElement('afterend', btn);
+}
+
+function changeQtyAlat(item, delta) {
+  // Jangan biarkan tombol minus menghapus item (pakai tombol Hapus dekat item)
+  const cur = qtyAlat[item] || 0;
+  if(delta < 0 && cur <= 1){ showToast('ℹ️ Pakai tombol Hapus untuk menghapus alat'); return; }
+  const newVal = qtyAlat[item] + delta;
+  if (newVal < 0) return;
+  const others = Object.entries(qtyAlat).filter(([k]) => k !== item).reduce((s,[,v]) => s+v, 0);
+  if (newVal + others > MAX) { showToast('⚠️ Max 10 unit total!'); return; }
+  qtyAlat[item] = newVal;
+  document.getElementById('qty-' + item).textContent = newVal;
+  // tampilkan tombol hapus saat qty > 0
+  ensureAlatRemoveUI(item);
+  const rm = document.getElementById('rm-' + item);
+  if(rm) rm.classList.toggle('show', (newVal > 0));
+  const row = document.getElementById('row-' + item);
+  if (row) row.classList.toggle('active', newVal > 0);
+  updateSteamLock();
+  updatePorsiHint();
+  updateSummary();
+  updateProgress();
+  saveDraft();
+}
+
+function updatePorsiHint() {
+  const total = qtyAlat.grill + qtyAlat.shabu + qtyAlat.shabuonly;
+  const hint = document.getElementById('porsiHint');
+  if (!hint) return;
+  if (total === 0) { hint.classList.remove('show'); return; }
+  const minOrang = total * 3, maxOrang = total * 6;
+  hint.classList.add('show');
+  hint.innerHTML = '👥 <strong>' + total + ' unit</strong> cukup untuk sekitar <strong>' + minOrang + '–' + maxOrang + ' orang</strong>.';
+}
+
+// ─── BAHAN ────────────────────────────────────────────────
+const pricesV = {
+  // Harga bahan satuan (ala carte) dibuat sedikit lebih mahal daripada paket
+  beef_lemak:45000, beef_nlemak:45000, beef_lemak_aus:75000,
+  saikoro:50000, steak_tenderloin:50000, steak_sirloin:50000,
+  chicken_dada:30000, chicken_paha:30000,
+  sosis_sapi:25000, sosis_ayam:25000, steam:50000,
+  sayur_basic:20000, sayur_komplit:25000, saus_bbq:15000, saus_bp:15000
+};
+const labelsV = {
+  beef_lemak:'Beef Slice US (Lemak)', beef_nlemak:'Beef Slice US (Low Fat)', beef_lemak_aus:'Beef Yoshinoya AUS',
+  saikoro:'Saikoro', steak_tenderloin:'Steak Tenderloin Meltique', steak_sirloin:'Steak Sirloin Meltique',
+  chicken_dada:'Chicken Dada', chicken_paha:'Chicken Paha',
+  sosis_sapi:'Sosis Sapi', sosis_ayam:'Sosis Ayam', steam:'Steamboat Mix',
+  sayur_basic:'Sayur Basic', sayur_komplit:'Sayur Komplit+Enoki',
+  saus_bbq:'Saus BBQ', saus_bp:'Saus Black Pepper'
+};
+const iconsV = {
+  beef_lemak:'🥩', beef_nlemak:'🥩', beef_lemak_aus:'🥩',
+  saikoro:'⭐', steak_tenderloin:'⭐', steak_sirloin:'⭐',
+  chicken_dada:'🍗', chicken_paha:'🍗',
+  sosis_sapi:'🌭', sosis_ayam:'🌭', steam:'🍲',
+  sayur_basic:'🥬', sayur_komplit:'🥬', saus_bbq:'🫙', saus_bp:'🫙'
+};
+const qtyV = {};
+Object.keys(pricesV).forEach(k => qtyV[k] = 0);
+
+function removeV(item){
+  if(!qtyV.hasOwnProperty(item)) return;
+  qtyV[item] = 0;
+  const qtyEl = document.getElementById('qty-' + item);
+  if(qtyEl) qtyEl.textContent = 0;
+  const row = document.getElementById('vrow-' + item);
+  if(row) row.classList.remove('active');
+  const rm = document.getElementById('rmv-' + item);
+  if(rm) rm.classList.remove('show');
+  updateSummary();
+  updateProgress();
+  updateFloatingCart();
+  saveDraft();
+  showToast('🗑️ Item dihapus');
+}
+
+function changeQtyV(item, delta) {
+  // Jangan biarkan tombol minus menghapus item (pakai tombol Hapus terpisah)
+  const cur = qtyV[item] || 0;
+  if(delta < 0 && cur <= 1){ showToast('ℹ️ Pakai tombol Hapus untuk menghapus item'); return; }
+  const newVal = qtyV[item] + delta;
+  if (newVal < 0) return;
+  qtyV[item] = newVal;
+  document.getElementById('qty-' + item).textContent = newVal;
+  const rm = document.getElementById('rmv-' + item);
+  if(rm) rm.classList.toggle('show', newVal > 0);
+  const row = document.getElementById('vrow-' + item);
+  if (row) row.classList.toggle('active', newVal > 0);
+  updateSummary();
+  updateProgress();
+  saveDraft();
+}
+
+function updateSteamLock() {
+  const hasShabu = hasShabuMode();
+  const steamNotice = document.getElementById('steamNotice');
+  const rowSteam = document.getElementById('vrow-steam');
+  const lockBadge = document.getElementById('steam-lock-badge');
+  const shabuOnlyTag = document.getElementById('shabu-only-tag');
+  const steamMandatory = document.getElementById('steam-mandatory');
+  if (hasShabu) {
+    rowSteam.style.opacity = '1'; rowSteam.style.pointerEvents = '';
+    lockBadge.style.display = 'none';
+    shabuOnlyTag.innerHTML = 'ℹ️ Opsional';
+    shabuOnlyTag.style.cssText = 'background:#E6F7EE;border-color:#A3D9B1;color:#1A7A3C;display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700;border:1px solid;';
+    // Di mode paket, jangan tampilkan label wajib/steamboat info
+    if (orderMode === 'paket') {
+      shabuOnlyTag.style.display = 'none';
+      steamMandatory.style.display = 'none';
+    } else {
+      shabuOnlyTag.style.display = 'inline-flex';
+      steamMandatory.style.display = 'none';
+    }
+  } else {
+    rowSteam.style.opacity = '0.4'; rowSteam.style.pointerEvents = 'none';
+    if (qtyV.steam > 0) { qtyV.steam = 0; document.getElementById('qty-steam').textContent = 0; document.getElementById('vrow-steam').classList.remove('active'); }
+    lockBadge.style.display = 'inline-flex';
+    shabuOnlyTag.innerHTML = '🔒 Khusus Shabu & Grill';
+    shabuOnlyTag.style.cssText = '';
+    shabuOnlyTag.style.display = (orderMode === 'paket') ? 'none' : '';
+    steamMandatory.style.display = 'none';
+  }
+
+  // Notice: jika custom dan hanya pilih Grill (tanpa shabu), ingatkan steam bukan untuk grill
+  if (steamNotice) {
+    const grillOnly = (orderMode === 'custom' && qtyAlat.grill > 0 && qtyAlat.shabu === 0 && qtyAlat.shabuonly === 0);
+    steamNotice.style.display = grillOnly ? 'block' : 'none';
+  }
+  updateSummary();
+}
+
+// ─── PAYMENT ──────────────────────────────────────────────
+let payment = null;
+function selectPayment(method) {
+  payment = method;
+  document.getElementById('pay-qris').classList.remove('selected');
+  document.getElementById('pay-bca').classList.remove('selected');
+  document.getElementById('pay-' + method).classList.add('selected');
+  updateDPInfo();
+  updateProgress();
+  saveDraft();
+}
+
+// ─── VOUCHER ──────────────────────────────────────────────
+const VALID_VOUCHERS = {
+  'ENJOYGRILL': { discount:20000, label:'ENJOYGRILL – Diskon Rp 20.000' }
+};
+let appliedVoucher = null;
+
+function applyVoucher() {
+  const code = document.getElementById('voucherInput').value.trim().toUpperCase();
+  const feedback = document.getElementById('voucherFeedback');
+  const chip = document.getElementById('voucherAppliedChip');
+  const input = document.getElementById('voucherInput');
+  feedback.className = 'voucher-feedback';
+  chip.classList.remove('show');
+  if (!code) { showToast('⚠️ Masukkan kode voucher!'); return; }
+  if (VALID_VOUCHERS[code]) {
+    appliedVoucher = { code, ...VALID_VOUCHERS[code] };
+    input.className = 'voucher-input valid';
+    feedback.className = 'voucher-feedback show success';
+    feedback.innerHTML = '🎉 Hemat <strong>Rp ' + appliedVoucher.discount.toLocaleString('id') + '</strong>!';
+    document.getElementById('voucherChipText').textContent = appliedVoucher.label;
+    chip.classList.add('show');
+    updateSummary(); updateDPInfo(); saveDraft();
+    showToast('🎉 Voucher ' + code + ' berhasil!');
+  } else {
+    appliedVoucher = null;
+    input.className = 'voucher-input invalid';
+    feedback.className = 'voucher-feedback show error';
+    feedback.innerHTML = '❌ Kode voucher tidak valid.';
+    updateSummary(); updateDPInfo();
+  }
+}
+
+function removeVoucher() {
+  appliedVoucher = null;
+  document.getElementById('voucherInput').value = '';
+  document.getElementById('voucherInput').className = 'voucher-input';
+  document.getElementById('voucherFeedback').className = 'voucher-feedback';
+  document.getElementById('voucherAppliedChip').classList.remove('show');
+  updateSummary(); updateDPInfo(); saveDraft();
+  showToast('Voucher dihapus.');
+}
+
+// ─── TOTAL ────────────────────────────────────────────────
+function getSubtotal() {
+  let t = 0;
+  if (orderMode === 'paket' && paketSelectedTotalQty() > 0) {
+    paketSelectedIds().forEach(id=>{ t += paketQty[id] * paketData[id].price; });
+  } else {
+    Object.entries(qtyAlat).forEach(([k,v]) => t += v * pricesAlat[k]);
+  }
+  Object.entries(qtyV).forEach(([k,v]) => t += v * pricesV[k]);
+  return t;
+}
+function getDiscount() {
+  if (!appliedVoucher) return 0;
+  return Math.min(appliedVoucher.discount, getSubtotal());
+}
+function getTotal() { return Math.max(0, getSubtotal() - getDiscount()); }
+
+function updateDPInfo() {
+  const subtotal = getSubtotal();
+  const discount = getDiscount();
+  const total = getTotal();
+  const dp = Math.round(total * 0.5);
+  const sisa = total - dp;
+  const box = document.getElementById('dpInfoBox');
+  const discRow = document.getElementById('dpDiscountRow');
+  if (payment && subtotal > 0) {
+    box.classList.add('show');
+    document.getElementById('dpTotal').textContent = 'Rp ' + subtotal.toLocaleString('id');
+    if (discount > 0) {
+      discRow.style.display = 'flex';
+      document.getElementById('dpDiscount').textContent = '-Rp ' + discount.toLocaleString('id');
+    } else { discRow.style.display = 'none'; }
+    document.getElementById('dpAfterDiscount').textContent = 'Rp ' + total.toLocaleString('id');
+    document.getElementById('dpAmount').textContent = 'Rp ' + dp.toLocaleString('id');
+    document.getElementById('dpSisa').textContent = 'Rp ' + sisa.toLocaleString('id');
+  } else { box.classList.remove('show'); }
+}
+
+function updateSummary() {
+  const items = [];
+  if (orderMode === 'paket' && paketSelectedTotalQty() > 0) {
+    paketSelectedIds().forEach(id=>{
+      const p = paketData[id];
+      items.push({ icon:'📦', label:p.name, qty:paketQty[id], total:paketQty[id]*p.price });
+    });
+  } else {
+    const lblAlat = { grill:'Grill Set', shabu:'Shabu & Grill Set', shabuonly:'Shabu Only' };
+    const icoAlat = { grill:'🔥', shabu:'🍲', shabuonly:'🫕' };
+    Object.entries(qtyAlat).forEach(([k,v]) => {
+      if (v > 0) items.push({ icon:icoAlat[k], label:lblAlat[k], qty:v, total:v*pricesAlat[k] });
+    });
+  }
+  Object.entries(qtyV).forEach(([k,v]) => {
+    if (v > 0) items.push({ icon:iconsV[k], label:labelsV[k], qty:v, total:v*pricesV[k] });
+  });
+  const container = document.getElementById('summaryItems');
+  const discount = getDiscount();
+  const total = getTotal();
+  let html = items.length === 0
+    ? '<div class="summary-row"><span class="summary-label">Belum ada item...</span><span></span></div>'
+    : items.map(i => '<div class="summary-row"><span class="summary-label">'+i.icon+' '+i.label+(i.qty>1?' ×'+i.qty:'')+'</span><span class="summary-value">Rp '+i.total.toLocaleString("id")+'</span></div>').join('');
+  if (discount > 0) {
+    html += '<div class="summary-row" style="color:#6EE7A0;"><span class="summary-label">🎟️ Diskon ('+appliedVoucher.code+')</span><span class="summary-value" style="color:#6EE7A0;">-Rp '+discount.toLocaleString("id")+'</span></div>';
+  }
+  container.innerHTML = html;
+  document.getElementById('totalPrice').textContent = 'Rp ' + total.toLocaleString('id');
+  updateDPInfo();
+  updateFloatingCart();
+  // update estimasi porsi (paket + add-ons)
+  if (typeof updatePorsiUI === 'function') updatePorsiUI();
+}
+
+// ─── PROGRESS ─────────────────────────────────────────────
+function updateProgress() {
+  const stepPaketAlat = (orderMode === 'paket')
+    ? (paketSelectedTotalQty() > 0)
+    : ((qtyAlat.grill + qtyAlat.shabu + qtyAlat.shabuonly) > 0);
+
+  // Mode paket: bahan opsional (anggap selesai jika paket sudah dipilih)
+  // Mode custom: wajib pilih minimal 1 bahan
+  const stepBahan = (orderMode === 'paket')
+    ? stepPaketAlat
+    : (Object.values(qtyV).reduce((a,b)=>a+(b||0),0) > 0);
+
+  const stepBayar = !!payment;
+
+  const done = [stepPaketAlat, stepBahan, stepBayar].filter(Boolean).length;
+  const score = Math.round((done / 3) * 100);
+
+  document.getElementById('progressBar').style.width = score + '%';
+  document.getElementById('progressPct').textContent = score + '%';
+}
+
+// ─── DRAFT ────────────────────────────────────────────────
+function saveDraft() {
+  const draft = {
+    orderMode, paketQty: {...paketQty},
+    name: document.getElementById('custName').value,
+    wa:   document.getElementById('custWA').value,
+    addr: document.getElementById('custAddr').value,
+    date: document.getElementById('custDate').value,
+    time: document.getElementById('custTime').value,
+    slot: selectedSlot,
+    note: document.getElementById('custNote').value,
+    qtyAlat: {...qtyAlat}, qtyV: {...qtyV},
+    payment, orderId, appliedVoucher,
+    savedAt: Date.now()
+  };
+  try { localStorage.setItem('eg_draft_v2', JSON.stringify(draft)); } catch(e) {}
+}
+
+function loadDraft() {
+  try {
+    const raw = localStorage.getItem('eg_draft_v2');
+    if (!raw) return;
+    const draft = JSON.parse(raw);
+    if (Date.now() - draft.savedAt > 86400000) { localStorage.removeItem('eg_draft_v2'); return; }
+
+    if (draft.orderMode) { orderMode = draft.orderMode; setMode(orderMode); }
+    // Restore paket qty (multi-paket)
+    Object.keys(paketQty).forEach(k=>paketQty[k]=0);
+    if (draft.paketQty) { Object.keys(paketQty).forEach(k=>paketQty[k]=Number(draft.paketQty[k]||0)); }
+    renderPaketCards();
+    document.getElementById('custName').value = draft.name || '';
+    document.getElementById('custWA').value   = draft.wa || '';
+    document.getElementById('custAddr').value = draft.addr || '';
+    document.getElementById('custDate').value = draft.date || '';
+    document.getElementById('custNote').value = draft.note || '';
+    selectedSlot = draft.slot || '';
+    document.getElementById('custTime').value = draft.time || '';
+    if (draft.date) loadSlots();
+
+    if (draft.qtyAlat) Object.keys(draft.qtyAlat).forEach(k => {
+      if (qtyAlat.hasOwnProperty(k)) { qtyAlat[k] = draft.qtyAlat[k]; document.getElementById('qty-'+k).textContent = draft.qtyAlat[k]; if (draft.qtyAlat[k]>0 && document.getElementById('row-'+k)) document.getElementById('row-'+k).classList.add('active'); }
+    });
+    if (draft.qtyV) Object.keys(draft.qtyV).forEach(k => {
+      if (qtyV.hasOwnProperty(k)) { qtyV[k] = draft.qtyV[k]; document.getElementById('qty-'+k).textContent = draft.qtyV[k]; if (draft.qtyV[k]>0) { const el=document.getElementById('vrow-'+k); if(el) el.classList.add('active'); } }
+    });
+    if (draft.appliedVoucher) {
+      appliedVoucher = draft.appliedVoucher;
+      document.getElementById('voucherInput').value = appliedVoucher.code;
+      document.getElementById('voucherInput').className = 'voucher-input valid';
+      document.getElementById('voucherFeedback').className = 'voucher-feedback show success';
+      document.getElementById('voucherFeedback').innerHTML = '🎉 Voucher aktif! Hemat <strong>Rp '+appliedVoucher.discount.toLocaleString('id')+'</strong>';
+      document.getElementById('voucherChipText').textContent = appliedVoucher.label;
+      document.getElementById('voucherAppliedChip').classList.add('show');
+    }
+    if (draft.payment) selectPayment(draft.payment);
+    if (draft.orderId) {
+      orderId = draft.orderId; localStorage.setItem('eg_order_id', orderId);
+      document.getElementById('orderIdBadge').textContent = '📋 ' + orderId;
+      document.getElementById('summaryOrderId').textContent = orderId;
+    }
+    validateWA(); updateSteamLock(); updatePorsiHint(); updateSummary(); updateProgress(); initLiveActivity(); updateFloatingCart();
+    const draftNotice = document.getElementById('draftNotice');
+    draftNotice.classList.add('show');
+    setTimeout(() => draftNotice.classList.remove('show'), 5000);
+  } catch(e) { localStorage.removeItem('eg_draft_v2'); }
+}
+
+// ─── RESET ────────────────────────────────────────────────
+function openResetModal() { document.getElementById('resetModal').classList.add('show'); }
+function closeResetModal() { document.getElementById('resetModal').classList.remove('show'); }
+function doReset() {
+  orderMode = 'paket';
+  Object.keys(paketQty).forEach(k=>paketQty[k]=0);
+  setMode('paket');
+  renderPaketCards();
+  document.getElementById('custName').value = '';
+  document.getElementById('custWA').value   = '';
+  document.getElementById('custAddr').value = '';
+  document.getElementById('custDate').value = '';
+  document.getElementById('custTime').value = '';
+  document.getElementById('custNote').value = '';
+  selectedSlot = '';
+  document.getElementById('slotGrid').style.display = 'none';
+  document.getElementById('slotPlaceholder').style.display = 'block';
+  document.getElementById('waStatus').textContent = '';
+  document.getElementById('waNoteOK').classList.remove('show');
+  Object.keys(qtyAlat).forEach(k => { qtyAlat[k]=0; document.getElementById('qty-'+k).textContent=0; const el=document.getElementById('row-'+k); if(el) el.classList.remove('active'); });
+  Object.keys(qtyV).forEach(k => { qtyV[k]=0; document.getElementById('qty-'+k).textContent=0; const el=document.getElementById('vrow-'+k); if(el) el.classList.remove('active'); });
+  payment = null; appliedVoucher = null;
+  document.getElementById('pay-qris').classList.remove('selected');
+  document.getElementById('pay-bca').classList.remove('selected');
+  document.getElementById('dpInfoBox').classList.remove('show');
+  document.getElementById('voucherInput').value = '';
+  document.getElementById('voucherInput').className = 'voucher-input';
+  document.getElementById('voucherFeedback').className = 'voucher-feedback';
+  document.getElementById('voucherAppliedChip').classList.remove('show');
+  orderId = generateOrderId(); localStorage.setItem('eg_order_id', orderId); localStorage.removeItem('eg_draft_v2');
+  document.getElementById('orderIdBadge').textContent = '📋 ' + orderId;
+  document.getElementById('summaryOrderId').textContent = orderId;
+  updateSteamLock(); updateSummary(); updateProgress();
+  maxSlideReached=0; currentSlide=0;
+  track.style.transform = 'translateX(0)';
+  updateStepDots(); rewireDots();
+  closeResetModal();
+  showToast('✅ Order direset!');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ─── SEND ORDER ───────────────────────────────────────────
+function clearNeedCheckout(){
+  document.querySelectorAll('.need-checkout').forEach(el=>el.classList.remove('need-checkout'));
+}
+function markNeed(el){
+  if(!el) return;
+  el.classList.add('need-checkout');
+}
+function focusNeed(el){
+  if(!el) return;
+  try{ el.scrollIntoView({behavior:'smooth', block:'center'}); }catch(e){ el.scrollIntoView(); }
+}
+
+let __toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if(!t) return;
+  t.textContent = msg;
+
+  // Pastikan toast hanya muncul sebentar dan benar-benar hilang dari layout
+  t.style.display = 'block';
+  t.classList.add('show');
+
+  if(__toastTimer) clearTimeout(__toastTimer);
+  __toastTimer = setTimeout(()=>{
+    t.classList.remove('show');
+    // tunggu animasi turun, lalu hilangkan dari layout
+    setTimeout(()=>{ t.style.display = 'none'; }, 220);
+  }, 1000);
+}
+
+function launchConfetti() {
+  const colors = ['#FF6B35','#FF8C5A','#FFD700','#FF4444','#44BB44','#4488FF'];
+  for (let i = 0; i < 80; i++) {
+    setTimeout(() => {
+      const c = document.createElement('div');
+      c.className = 'confetti-piece';
+      c.style.left = Math.random() * 100 + 'vw';
+      c.style.top = '-10px';
+      c.style.background = colors[Math.floor(Math.random() * colors.length)];
+      c.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+      c.style.width = (6 + Math.random() * 8) + 'px';
+      c.style.height = (6 + Math.random() * 8) + 'px';
+      c.style.animationDuration = (2 + Math.random() * 2) + 's';
+      document.body.appendChild(c);
+      setTimeout(() => c.remove(), 4000);
+    }, i * 25);
+  }
+}
+
+function sendOrder() {
+  // Guard checklist: wajib ada alat/paket + bahan sebelum bisa kirim
+  const hasPaketOrAlat = (orderMode === 'paket')
+    ? (paketSelectedTotalQty() > 0)
+    : ((qtyAlat.grill + qtyAlat.shabu + qtyAlat.shabuonly) > 0);
+  if(!hasPaketOrAlat){
+    showToast('⚠️ Pilih paket / alat masak dulu ya!');
+    try{ goToSlide(0); }catch(e){}
+    return;
+  }
+
+  // Mode paket: bahan/add-ons opsional
+  const totalBahan = Object.values(qtyV).reduce((a,b)=>a+(b||0),0);
+  if(orderMode === 'custom' && totalBahan === 0){
+    showToast('⚠️ Pilih minimal 1 bahan / add-ons dulu ya!');
+    try{ goToSlide(1); }catch(e){}
+    return;
+  }
+
+  // Data diri & pembayaran wajib (pakai validator yang sudah ada)
+  if (!validateSlide(2)) { try{ goToSlide(2); }catch(e){}; return; }
+  if (!validateSlide(3)) { try{ goToSlide(3); }catch(e){}; return; }
+  const name = document.getElementById('custName').value.trim();
+  const wa   = document.getElementById('custWA').value.trim();
+  const addr = document.getElementById('custAddr').value.trim();
+  const note = document.getElementById('custNote').value.trim();
+  const dateVal = document.getElementById('custDate').value;
+  const timeVal = document.getElementById('custTime').value;
+  const dateFormatted = dateVal ? new Date(dateVal).toLocaleDateString('id-ID',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) : '-';
+  const payNames = { qris:'QRIS (GoPay/OVO/Dana/ShopeePay)', bca:'Transfer BCA' };
+  const subtotal = getSubtotal();
+  const discount = getDiscount();
+  const total = getTotal();
+  const dp = Math.round(total * 0.5);
+
+  const SEP = '--------------------';
+  const lines = [];
+  lines.push('*ORDER ENJOY GRILL* 🔥');
+  lines.push('Order ID: *' + orderId + '*');
+  lines.push(SEP);
+  lines.push('*DATA PEMESAN*');
+  lines.push('Nama   : ' + name);
+  lines.push('WA     : ' + wa);
+  lines.push('Alamat : ' + addr);
+  lines.push('Tanggal: ' + dateFormatted);
+  lines.push('Jam    : ' + timeVal);
+  lines.push(SEP);
+  if (orderMode === 'paket' && paketSelectedTotalQty() > 0) {
+    lines.push('*PAKET DIPILIH*');
+    paketSelectedIds().forEach(id=>{
+      lines.push('📦 ' + paketData[id].name + ' x' + paketQty[id] + ' = Rp ' + (paketQty[id]*paketData[id].price).toLocaleString('id'));
+    });
+  } else {
+    lines.push('*ALAT MASAK*');
+    if (qtyAlat.grill > 0) lines.push('- Grill Set x' + qtyAlat.grill + ' = Rp ' + (qtyAlat.grill*pricesAlat.grill).toLocaleString('id'));
+    if (qtyAlat.shabu > 0) lines.push('- Shabu & Grill Set x' + qtyAlat.shabu + ' = Rp ' + (qtyAlat.shabu*pricesAlat.shabu).toLocaleString('id'));
+    if (qtyAlat.shabuonly > 0) lines.push('- Shabu Only x' + qtyAlat.shabuonly + ' = Rp ' + (qtyAlat.shabuonly*pricesAlat.shabuonly).toLocaleString('id'));
+  }
+  const addonItems = Object.entries(qtyV).filter(([,v]) => v > 0);
+  if (addonItems.length > 0) {
+    lines.push('');
+    lines.push(orderMode === 'paket' ? '*ADD-ON TAMBAHAN*' : '*BAHAN MAKANAN*');
+    addonItems.forEach(([k,v]) => lines.push('- ' + labelsV[k] + ' x' + v + ' = Rp ' + (v*pricesV[k]).toLocaleString('id')));
+  }
+  lines.push(SEP);
+  lines.push('Subtotal   : Rp ' + subtotal.toLocaleString('id'));
+  if (discount > 0) lines.push('Voucher    : -Rp ' + discount.toLocaleString('id'));
+  lines.push('*TOTAL: Rp ' + total.toLocaleString('id') + '*');
+  lines.push('Pembayaran : ' + payNames[payment]);
+  lines.push('DP 50%     : *Rp ' + dp.toLocaleString('id') + '*');
+  lines.push('Pelunasan  : Rp ' + (total-dp).toLocaleString('id') + ' (saat delivery)');
+  if (note) { lines.push(''); lines.push('Catatan: ' + note); }
+  lines.push(SEP);
+  lines.push('Terima kasih sudah order Enjoy Grill! 🙏🔥');
+
+  const msg = lines.join('\n');
+  launchConfetti();
+  showToast('🎉 Membuka WhatsApp...');
+  localStorage.removeItem('eg_draft_v2');
+  localStorage.removeItem('eg_order_id');
+  // NOTE: Jangan pakai setTimeout untuk window.open, karena banyak browser akan menganggapnya popup non-user-gesture dan memblokir.
+  const waUrl = 'https://wa.me/6285771276910?text=' + encodeURIComponent(msg);
+
+  // Tutup bottom sheet (kalau sedang terbuka) biar UI rapi
+  try { window.__closeAllSheets && window.__closeAllSheets(); } catch(e) {}
+
+  // Paling kompatibel untuk mobile/in-app browser: navigasi langsung
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  if (isMobile) {
+    window.location.href = waUrl;
+    return;
+  }
+
+  // Desktop: coba buka tab baru lewat anchor click (lebih aman daripada window.open)
+  const a = document.createElement('a');
+  a.href = waUrl;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  // Fallback terakhir
+  setTimeout(()=>{ try{ window.location.href = waUrl; }catch(e){} }, 150);
+}
+
+// ─── EXPOSE GLOBAL HANDLERS (untuk onclick) ───────────────
+// Beberapa elemen memakai inline `onclick="..."`. Pastikan fungsi tersedia di `window`.
+window.goNext = goNext;
+window.goPrev = goPrev;
+window.goToSlide = goToSlide;
+window.setPaketTab = setPaketTab;
+window.setMode = setMode;
+window.selectPaket = selectPaket;
+window.changePaketQty = changePaketQty;
+window.changeQtyAlat = changeQtyAlat;
+window.removeAlat = removeAlat;
+window.changeQtyV = changeQtyV;
+window.removeV = removeV;
+window.selectPayment = selectPayment;
+window.applyVoucher = applyVoucher;
+window.removeVoucher = removeVoucher;
+window.sendOrder = sendOrder;
+window.openResetModal = openResetModal;
+window.closeResetModal = closeResetModal;
+window.doReset = doReset;
+
+// ─── INIT ─────────────────────────────────────────────────
+document.getElementById('custDate').min = new Date().toISOString().split('T')[0];
+rewireDots();
+ensurePaketQtyUI();
+renderPaketCards();
+updateSteamLock();
+updateSummary();
+updateProgress();
+loadDraft();
+
+
+
+
+
+
+// ─── PAKET QTY (FLOATING CART) ────────────────────────────
+document.addEventListener('click', (ev)=>{
+  const btn = ev.target.closest('[data-paket-act]');
+  if(!btn) return;
+  const id = btn.getAttribute('data-paket-id');
+  const act = btn.getAttribute('data-paket-act');
+  if(!id) return;
+  changePaketQty(id, act==='plus' ? 1 : -1);
+}, true);
+// ─── PAKET REMOVE (FLOATING CART) ──────────────────────────
+document.addEventListener('click', (ev)=>{
+  const btn = ev.target.closest('[data-remove-paket]');
+  if(!btn) return;
+  const id = btn.getAttribute('data-remove-paket');
+  if(!id) return;
+  paketQty[id] = 0;
+  renderPaketCards();
+  updateSteamLock();
+  updateSummary();
+  updateProgress();
+  saveDraft();
+  showToast('🗑️ Paket dihapus');
+}, true);
+
+// ─── REMOVE ITEM (FLOATING CART) ───────────────────────────
+document.addEventListener('click', (ev)=>{
+  const btn = ev.target.closest('[data-remove-type]');
+  if(!btn) return;
+  const type = btn.getAttribute('data-remove-type');
+  const id = btn.getAttribute('data-remove-id');
+  if(!type || !id) return;
+
+  if(type==='paket'){ paketQty[id] = 0; renderPaketCards(); }
+  if(type==='alat'){ if(qtyAlat.hasOwnProperty(id)){ qtyAlat[id] = 0; const el=document.getElementById('qty-'+id); if(el) el.textContent = 0; const row=document.getElementById('row-'+id); if(row) row.classList.remove('active'); } }
+  if(type==='v'){ if(qtyV.hasOwnProperty(id)){ qtyV[id] = 0; const el=document.getElementById('qty-'+id); if(el) el.textContent = 0; const row=document.getElementById('vrow-'+id); if(row) row.classList.remove('active'); } }
+
+  updateSteamLock();
+  updateSummary();
+  updateProgress();
+  updateFloatingCart();
+  saveDraft();
+  showToast('🗑️ Item dihapus');
+}, true);
+
+// ─── ITEM QTY (FLOATING CART: alat + bahan) ───────────────
+document.addEventListener('click', (ev)=>{
+  const btn = ev.target.closest('[data-item-act]');
+  if(!btn) return;
+  const id = btn.getAttribute('data-item-id');
+  const act = btn.getAttribute('data-item-act');
+  const type = btn.getAttribute('data-item-type');
+  if(!id || !act || !type) return;
+  const delta = (act==='plus') ? 1 : -1;
+  if(type==='alat') changeQtyAlat(id, delta);
+  if(type==='v') changeQtyV(id, delta);
+  updateSummary();
+  updateProgress();
+  updateFloatingCart();
+  saveDraft();
+}, true);
+
+// ─── COPY TO CLIPBOARD ─────────────────────────────────────
+function showCopiedToast(label){
+  showToast('✅ Tersalin' + (label ? (': ' + label) : '') );
+}
+async function copyToClipboard(text,label){
+  try{
+    await navigator.clipboard.writeText(text);
+    showCopiedToast(label);
+  }catch(e){
+    // fallback
+    const ta=document.createElement('textarea');
+    ta.value=text; ta.style.position='fixed'; ta.style.left='-9999px';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); showCopiedToast(label); }
+    catch(err){ showToast('⚠️ Gagal menyalin'); }
+    document.body.removeChild(ta);
+  }
+}
+
+document.addEventListener('click', (ev)=>{
+  const btn = ev.target.closest('.copy-btn');
+  if(!btn) return;
+  const direct = btn.getAttribute('data-copy-text');
+  const targetSel = btn.getAttribute('data-copy-target');
+  if(direct){ copyToClipboard(direct, ''); return; }
+  if(targetSel){
+    const el = document.querySelector(targetSel);
+    if(!el) return;
+    const raw = el.textContent || '';
+    // If order badge: remove emoji
+    const cleaned = raw.replace(/^\s*📋\s*/,'').trim();
+    copyToClipboard(cleaned, btn.id==='copyTotalBtn' ? 'Total' : 'ID Order');
+  }
+});
+
+
+
+// ─── FLOATING CART UPDATE ─────────────────────────────────
+
+function updateFloatingCart(){
+  const totalEl = document.getElementById('totalPrice');
+  const fcTotal = document.getElementById('fcTotal');
+  const fcItems  = document.getElementById('fcItems');
+  const fcPaketItems = document.getElementById('fcPaketItems');
+  const fcPaketWrap = document.getElementById('fcPaket');
+  if(!totalEl || !fcTotal || !fcItems) return;
+  fcTotal.textContent = totalEl.textContent;
+  const tabTotal = document.getElementById('tabPesananTotal');
+  if(tabTotal) tabTotal.textContent = totalEl.textContent;
+  
+
+  // ── Paket summary (nama paket + qty) ────────────────────
+  if(fcPaketItems && fcPaketWrap){
+    if(orderMode === 'paket' && paketSelectedTotalQty() > 0){
+      fcPaketWrap.style.display='block';
+      let phtml='';
+      paketSelectedIds().forEach(id=>{
+        const p = paketData[id];
+        const q = paketQty[id]||0;
+        if(q<=0) return;
+        phtml += `
+          <div class="fc-row">
+            <div class="fc-row-wrap" style="width:100%;">
+              <div class="fc-left">${p.name}</div>
+              <div class="fc-right">Rp ${(q*p.price).toLocaleString('id')}</div>
+              <div class="fc-ctrl">
+                <button class="fc-qty-btn" type="button" data-paket-act="minus" data-paket-id="${id}" aria-label="kurangi ${p.name}">−</button>
+                <div class="fc-qty-num">${q}</div>
+                <button class="fc-qty-btn" type="button" data-paket-act="plus" data-paket-id="${id}" aria-label="tambah ${p.name}">+</button>
+              </div>
+              <button class="fc-remove" type="button" data-remove-type="paket" data-remove-id="${id}" aria-label="hapus ${p.name}">Hapus</button>
+            </div>
+          </div>`;
+      });
+      // Jika belum ada paket: tampilkan notice 1 detik lalu hilang dari layout
+      window.__fcPaketEmptyTimer && clearTimeout(window.__fcPaketEmptyTimer);
+      if(!phtml){
+        fcPaketItems.style.display = 'block';
+        fcPaketItems.innerHTML = '<div style="padding:8px 0;color:rgba(0,0,0,.55);font-size:12px;">Belum ada paket...</div>';
+        window.__fcPaketEmptyTimer = setTimeout(()=>{
+          fcPaketItems.innerHTML='';
+          fcPaketItems.style.display='none';
+        }, 1000);
+      } else {
+        fcPaketItems.style.display = 'block';
+        fcPaketItems.innerHTML = phtml;
+      }
+    } else {
+      fcPaketWrap.style.display='none';
+      fcPaketItems.innerHTML='';
+    }
+  }
+
+  // ── Alat + Bahan (INTERAKTIF +/-) ───────────────────────
+  let html='';
+
+  // 1) Alat (hanya mode custom)
+  const alatLabel = { grill:'Grill Set', shabu:'Shabu & Grill Set', shabuonly:'Shabu Only' };
+  Object.entries(qtyAlat).forEach(([k,q])=>{
+    if(!q || q<=0) return;
+    const price = pricesAlat[k] || 0;
+    html += `
+      <div class="fc-row">
+        <div class="fc-row-wrap" style="width:100%;">
+          <div class="fc-left">🔥 ${alatLabel[k] || k}</div>
+          <div class="fc-right">Rp ${(q*price).toLocaleString('id')}</div>
+          <div class="fc-ctrl">
+            <button class="fc-qty-btn" type="button" data-item-type="alat" data-item-act="minus" data-item-id="${k}" aria-label="kurangi ${alatLabel[k] || k}">−</button>
+            <div class="fc-qty-num">${q}</div>
+            <button class="fc-qty-btn" type="button" data-item-type="alat" data-item-act="plus" data-item-id="${k}" aria-label="tambah ${alatLabel[k] || k}">+</button>
+          </div>
+          <button class="fc-remove" type="button" data-remove-type="alat" data-remove-id="${k}" aria-label="hapus ${alatLabel[k] || k}">Hapus</button>
+        </div>
+      </div>`;
+  });
+
+  // 2) Bahan / add-ons
+  Object.entries(qtyV).forEach(([k,q])=>{
+    if(!q || q<=0) return;
+    const price = pricesV[k] || 0;
+    const label = (iconsV[k] ? (iconsV[k] + ' ') : '') + (labelsV[k] || k);
+    html += `
+      <div class="fc-row">
+        <div class="fc-row-wrap" style="width:100%;">
+          <div class="fc-left">${label}</div>
+          <div class="fc-right">Rp ${(q*price).toLocaleString('id')}</div>
+          <div class="fc-ctrl">
+            <button class="fc-qty-btn" type="button" data-item-type="v" data-item-act="minus" data-item-id="${k}" aria-label="kurangi ${labelsV[k] || k}">−</button>
+            <div class="fc-qty-num">${q}</div>
+            <button class="fc-qty-btn" type="button" data-item-type="v" data-item-act="plus" data-item-id="${k}" aria-label="tambah ${labelsV[k] || k}">+</button>
+          </div>
+          <button class="fc-remove" type="button" data-remove-type="v" data-remove-id="${k}" aria-label="hapus ${labelsV[k] || k}">Hapus</button>
+        </div>
+      </div>`;
+  });
+
+  // Empty state
+  window.__fcEmptyTimer && clearTimeout(window.__fcEmptyTimer);
+  if(!html){
+    fcItems.style.display = 'block';
+    fcItems.innerHTML = '<div style="padding:10px 0;color:rgba(0,0,0,.55);font-size:12px;">Belum ada item...</div>';
+    window.__fcEmptyTimer = setTimeout(()=>{
+      fcItems.innerHTML = '';
+      fcItems.style.display = 'none';
+    }, 1000);
+  } else {
+    fcItems.style.display = 'block';
+    fcItems.innerHTML = html;
+  }
+}
+
+function positionFloaters(){
+  // Tidak ada floating overlay lagi. Disisakan untuk kompatibilitas call lama.
+}
+
+(function initBottomSheets(){
+  const backdrop = document.getElementById('cartBackdrop');
+  const cartSheet = document.getElementById('floatingCart');
+  const cartCard = cartSheet ? cartSheet.querySelector('.floating-cart-card') : null;
+  const cartClose = document.getElementById('fcClose');
+  const tabPesanan = document.getElementById('tabPesanan');
+
+  const porsiSheet = document.getElementById('porsiSheet');
+  const porsiCard = porsiSheet ? porsiSheet.querySelector('.porsi-sheet-card') : null;
+  const porsiClose = document.getElementById('porsiClose');
+  const tabPorsi = document.getElementById('tabPorsi');
+
+  if(!backdrop || !cartSheet || !cartCard || !cartClose || !tabPesanan || !porsiSheet || !porsiCard || !porsiClose || !tabPorsi) return;
+
+  function closeAll(){
+    cartSheet.classList.remove('open');
+    porsiSheet.classList.remove('open');
+    backdrop.classList.remove('show');
+
+    cartSheet.setAttribute('aria-hidden','true');
+    porsiSheet.setAttribute('aria-hidden','true');
+    backdrop.setAttribute('aria-hidden','true');
+  }
+
+  // Expose supaya tombol Next bisa menutup sheet
+  window.__closeAllSheets = closeAll;
+
+  const tabNext = document.getElementById('tabNext');
+  const tabBack = document.getElementById('tabBack');
+
+  if(tabNext){
+    tabNext.addEventListener('click', ()=>{
+      closeAll();
+      if(currentSlide === 3) sendOrder();
+      else goNext(currentSlide);
+    });
+  }
+  if(tabBack){
+    tabBack.addEventListener('click', ()=>{
+      closeAll();
+      if(currentSlide > 0) goPrev(currentSlide);
+      else showToast('Kamu sudah di langkah pertama');
+    });
+  }
+
+  function openCart(){
+    closeAll();
+    cartSheet.classList.add('open');
+    backdrop.classList.add('show');
+    cartSheet.setAttribute('aria-hidden','false');
+    backdrop.setAttribute('aria-hidden','false');
+  }
+
+  function openPorsi(){
+    closeAll();
+    porsiSheet.classList.add('open');
+    backdrop.classList.add('show');
+    porsiSheet.setAttribute('aria-hidden','false');
+    backdrop.setAttribute('aria-hidden','false');
+  }
+
+  tabPesanan.addEventListener('click', ()=>{
+    if(cartSheet.classList.contains('open')) closeAll();
+    else openCart();
+  });
+
+  tabPorsi.addEventListener('click', ()=>{
+    if(porsiSheet.classList.contains('open')) closeAll();
+    else openPorsi();
+  });
+
+  if(typeof updateNextTab === 'function') setTimeout(updateNextTab, 0);
+
+  cartClose.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); closeAll(); });
+  porsiClose.addEventListener('click', (e)=>{ e.preventDefault(); e.stopPropagation(); closeAll(); });
+  backdrop.addEventListener('click', closeAll);
+
+  cartCard.addEventListener('click', (e)=> e.stopPropagation());
+  porsiCard.addEventListener('click', (e)=> e.stopPropagation());
+
+  window.addEventListener('keydown', (e)=>{
+    if(e.key === 'Escape') closeAll();
+  });
+})();
+
+
+
+// ─── LIVE ACTIVITY (biar terasa aktif) ────────────────────
+function initLiveActivity(){
+  const pill=document.getElementById('livePill');
+  if(!pill) return;
+  pill.classList.add('pulse');
+  const msgs=[
+    '● Live · Admin ready',
+    '● Live · Promo voucher ENJOYGRILL',
+    '● Live · Slot cepat penuh',
+    '● Live · Cek ringkasan di kanan atas'
+  ];
+  let i=0;
+  setInterval(()=>{ i=(i+1)%msgs.length; pill.textContent=msgs[i]; }, 3500);
+}
+
+</script>
+</body>
+</html>
