@@ -2139,15 +2139,31 @@ const TOTAL_SLIDES = 4;
 const track = document.getElementById('slideTrack');
 
 function updateNextTab(){
-  const el = document.getElementById('tabNextLabel');
-  if(!el) return;
-  const labels = [
-    'Pilih Bahan →',
-    'Isi Data →',
-    'Konfirmasi →',
-    'Kirim WA'
-  ];
-  el.textContent = labels[currentSlide] || 'Lanjut →';
+  const nextBtn = document.getElementById('tabNext');
+  const titleEl = nextBtn ? nextBtn.querySelector('.tab-title') : null;
+  const subEl = document.getElementById('tabNextLabel');
+
+  // Default: tombol "Lanjut" + sublabel per step
+  if(titleEl) titleEl.textContent = 'Lanjut';
+
+  if(subEl){
+    const labels = [
+      'Pilih Bahan →',
+      'Isi Data →',
+      'Konfirmasi →',
+      ''
+    ];
+    subEl.textContent = labels[currentSlide] ?? 'Lanjut →';
+  }
+
+  // Step terakhir: ganti tombol jadi "Konfirmasi via WhatsApp"
+  if(currentSlide === 3){
+    if(titleEl) titleEl.textContent = 'Konfirmasi via WhatsApp';
+    if(nextBtn) nextBtn.setAttribute('aria-label','Konfirmasi via WhatsApp');
+    if(subEl) subEl.textContent = ' '; // menjaga tinggi layout bila sub terlihat
+  } else {
+    if(nextBtn) nextBtn.setAttribute('aria-label','Lanjut');
+  }
 
   // Slide 1: sembunyikan tombol Kembali
   const backBtn = document.getElementById('tabBack');
