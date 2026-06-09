@@ -232,15 +232,28 @@ textarea { min-height:80px; resize:vertical; }
 .section-divider span { font-size:12px; font-weight:700; color:var(--text-muted); white-space:nowrap; }
 .section-divider::before,.section-divider::after { content:''; flex:1; height:1px; background:#E8DDD5; }
 
-.product-row { display:flex; align-items:center; gap:14px; padding:14px; border-radius:var(--radius-sm); border:1.5px solid #F0E8E0; background:var(--cream); margin-bottom:10px; transition:border-color 0.2s,background 0.2s,transform 0.2s; }
-.product-info { flex:1; min-width:0; }
-.product-row:hover { transform:translateX(3px); }
-.product-row.active { border-color:var(--orange); background:var(--warm); }
+.product-row { display:flex; flex-direction:column; align-items:stretch; border-radius:var(--radius-sm); border:1.5px solid #F0E8E0; background:var(--cream); margin-bottom:10px; overflow:hidden; transition:border-color 0.2s,background 0.2s,transform 0.2s; position:relative; }
+.product-row:hover { transform:translateY(-2px); }
+.product-row.active { border-color:var(--orange); background:var(--cream); }
+
+/* Header card alat (mirip gaya card paket) */
+.alat-top{display:flex;align-items:center;gap:14px;padding:14px;padding-right:124px;background:linear-gradient(135deg, rgba(255,107,53,.12), rgba(255,248,240,1));position:relative;}
+.alat-badge{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.88);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid rgba(255,107,53,.22);border-radius:999px;padding:4px 10px;font-size:10px;font-weight:900;color:var(--orange-dark);white-space:nowrap;}
 .product-emoji { font-size:1.8rem; flex-shrink:0; }
 .product-info { flex:1; min-width:0; }
-.product-name { font-weight:700; font-size:14px; }
-.product-desc { font-size:12px; color:var(--text-muted); line-height:1.5; margin-top:1px; }
-.product-price { font-size:13px; font-weight:700; color:var(--orange); margin-top:2px; }
+.product-name { font-weight:900; font-size:14px; color:rgba(0,0,0,.78); }
+.product-desc { font-size:12px; color:var(--text-muted); line-height:1.5; margin-top:2px; }
+.product-price { font-size:13px; font-weight:900; color:var(--orange-dark); margin-top:4px; }
+
+/* Body card alat: detail selalu terlihat */
+.alat-body{padding:12px 14px 74px;background:#fff;border-top:1px solid #F0E8E0;}
+.alat-qty{position:absolute;right:12px;bottom:12px;}
+.alat-qty .qty-btn{width:44px;height:44px;}
+.alat-qty .qty-num{min-width:40px;font-size:14px;}
+.alat-title{font-size:11px;font-weight:900;color:rgba(0,0,0,.65);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px;}
+.alat-list{margin:0;padding-left:18px;font-size:11.5px;line-height:1.55;color:rgba(0,0,0,.62);}
+.alat-list li{margin:2px 0;}
+.alat-note{margin-top:10px;font-size:11.5px;line-height:1.5;color:rgba(0,0,0,.62);background:rgba(255,248,240,.75);border:1px solid rgba(255,107,53,.18);padding:10px 12px;border-radius:12px;}
 .qty-control { display:flex; align-items:center; background:white; border:1.5px solid #E8DDD5; border-radius:100px; overflow:hidden; flex-shrink:0; }
 .qty-btn { width:34px; height:34px; background:none; border:none; font-size:17px; font-weight:700; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:color 0.2s,background 0.2s; font-family:'Poppins',sans-serif; }
 .qty-btn:hover { color:var(--orange); background:var(--warm); }
@@ -425,7 +438,7 @@ textarea { min-height:80px; resize:vertical; }
 @keyframes needPulse{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
 
 /* MODAL */
-.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:9000; display:none; align-items:center; justify-content:center; padding:20px; }
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:12000; display:none; align-items:center; justify-content:center; padding:20px; }
 .modal-overlay.show { display:flex; }
 .modal-box { background:white; border-radius:var(--radius); padding:28px; max-width:400px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
 .modal-title { font-size:1.1rem; font-weight:800; margin-bottom:8px; }
@@ -585,33 +598,39 @@ textarea { min-height:80px; resize:vertical; }
   .product-row.active,
   .bahan-card.active{background:#fff;border-color:rgba(255,106,0,.28);}
 
-  /* Alat (custom) */
-  /* grid 3 kolom: emoji | info | qty (biar rapi  sejajar) */
-  .product-row{
-    display:grid;
-    grid-template-columns: 44px minmax(0,1fr) auto;
-    align-items:center;
-    gap:12px;
-    padding:var(--m-card-pad);
+  /* Alat (custom) — versi card (tanpa buka/tutup) */
+  .product-row.alat-card{
+    display:flex;
+    flex-direction:column;
+    padding:0;
     border-radius:var(--m-card-radius);
     margin-bottom:var(--m-card-mb);
+    overflow:hidden;
+    position:relative;
   }
-  .product-emoji{
+  .product-row.alat-card .alat-top{
+    padding:12px;
+    padding-right:124px;
+    gap:12px;
+  }
+  .product-row.alat-card .alat-badge{
+    top:10px;
+    right:10px;
+    font-size:9.5px;
+    padding:4px 9px;
+  }
+  .product-row.alat-card .product-emoji{
     font-size:1.55rem;
     width:44px;
     display:flex;
     align-items:center;
     justify-content:center;
   }
-  .product-info{
+  .product-row.alat-card .product-info{
     min-width:0;
-    /* bikin tinggi konten konsisten supaya qty tidak naik-turun */
-    display:grid;
-    grid-template-rows:auto auto auto;
-    row-gap:2px;
-    align-content:center;
   }
-  .qty-control{justify-self:end;}
+  .product-row.alat-card .alat-body{padding:10px 12px 74px;}
+  .product-row.alat-card .alat-qty{right:12px;bottom:12px;}
 
   .product-name{
     line-height:1.2;
@@ -1058,6 +1077,19 @@ textarea { min-height:80px; resize:vertical; }
 </div>
 </div>
 </div>
+
+<!-- CONFIRM MODAL (tema web, pengganti window.confirm) -->
+<div class="modal-overlay" id="confirmModal" aria-hidden="true">
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="modal-title" id="confirmTitle">🗑️ Hapus item?</div>
+    <div class="modal-body" id="confirmBody">Apakah kamu yakin?</div>
+    <div class="modal-btns">
+      <button class="modal-btn-cancel" id="confirmCancel" type="button">Batal</button>
+      <button class="modal-btn-confirm" id="confirmOk" type="button">Hapus</button>
+    </div>
+  </div>
+</div>
+
 <div class="header">
 <div class="logo-wrap" onclick="goToSlide(0)">
     <img class="logo-img" src="data:image/jpeg;base64,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" alt="Enjoy Grill Logo"/>
@@ -1079,6 +1111,9 @@ textarea { min-height:80px; resize:vertical; }
   </button>
   <div class="live-pill secondary" id="livePill">● Live</div>
 </div>
+
+  
+
 </div>
 <div class="main">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
@@ -1273,47 +1308,46 @@ textarea { min-height:80px; resize:vertical; }
 </div>
 </div>
 <div id="section-custom" style="display:none">
-<div class="product-row" id="row-grill">
-<div class="product-emoji">🔥</div>
-<div class="product-info">
-<div class="product-name">Grill Set</div>
-<div class="product-desc">Sewa alat grill lengkap (praktis tinggal bakar)</div>
-<div class="product-price">Rp 60.000 / unit</div>
-<details class="prod-details">
-  <summary>ℹ️ Lihat detail</summary>
-  <div class="prod-detail-body">
-    <div class="pd-title">Komponen yang didapat</div>
-    <ul>
+<div class="product-row alat-card" id="row-grill">
+  <div class="alat-top">
+    <div class="product-emoji">🔥</div>
+    <div class="product-info">
+      <div class="product-name">Grill Set</div>
+      <div class="product-desc">Sewa alat grill lengkap (praktis tinggal bakar)</div>
+      <div class="product-price">Rp 60.000 / unit</div>
+    </div>
+    <div class="alat-badge">👥 3–6 orang/unit</div>
+  </div>
+  <div class="alat-body">
+    <div class="alat-title">Komponen yang didapat</div>
+    <ul class="alat-list">
       <li>Kompor portable + pan grill</li>
       <li>Gas 1 tabung (untuk pemakaian standar)</li>
       <li>Capitan / tang penjepit</li>
       <li>4 set alat makan sekali pakai</li>
     </ul>
-    <div class="pd-note">Catatan: paket ini <b>hanya sewa alat</b>. Untuk bahan daging/suki bisa kamu pilih di Step 2.</div>
-    <div class="prod-cta">
-      <a class="primary" href="#" onclick="document.getElementById('qty-grill')?.scrollIntoView({behavior:'smooth',block:'center'});return false;">➕ Tambah jumlah</a>
-      <a href="https://wa.me/6285771276910?text=Halo%20admin%2C%20mau%20tanya%20detail%20Sewa%20Grill%20Set" target="_blank" rel="noopener">💬 Tanya admin</a>
+    <div class="alat-qty">
+      <div class="qty-control">
+        <button class="qty-btn" onclick="changeQtyAlat('grill',-1)">−</button>
+        <div class="qty-num" id="qty-grill">0</div>
+        <button class="qty-btn" onclick="changeQtyAlat('grill',1)">+</button>
+      </div>
     </div>
   </div>
-</details>
 </div>
-<div class="qty-control">
-<button class="qty-btn" onclick="changeQtyAlat('grill',-1)">−</button>
-<div class="qty-num" id="qty-grill">0</div>
-<button class="qty-btn" onclick="changeQtyAlat('grill',1)">+</button>
-</div>
-</div>
-<div class="product-row" id="row-shabu">
-<div class="product-emoji">🍲</div>
-<div class="product-info">
-<div class="product-name">Shabu &amp; Grill Set</div>
-<div class="product-desc">Paket kombo: shabu + grill (alat lengkap)</div>
-<div class="product-price">Rp 75.000 / unit</div>
-<details class="prod-details">
-  <summary>ℹ️ Lihat detail</summary>
-  <div class="prod-detail-body">
-    <div class="pd-title">Komponen yang didapat</div>
-    <ul>
+<div class="product-row alat-card" id="row-shabu">
+  <div class="alat-top">
+    <div class="product-emoji">🍲</div>
+    <div class="product-info">
+      <div class="product-name">Shabu &amp; Grill Set</div>
+      <div class="product-desc">Paket kombo: shabu + grill (alat lengkap)</div>
+      <div class="product-price">Rp 75.000 / unit</div>
+    </div>
+    <div class="alat-badge">👥 3–6 orang/unit</div>
+  </div>
+  <div class="alat-body">
+    <div class="alat-title">Komponen yang didapat</div>
+    <ul class="alat-list">
       <li>Kompor portable + pan grill</li>
       <li>Peralatan shabu (centong/ladle)</li>
       <li>Capitan / tang penjepit</li>
@@ -1321,54 +1355,62 @@ textarea { min-height:80px; resize:vertical; }
       <li>Kuah tomyam (untuk shabu)</li>
       <li>4 set alat makan sekali pakai</li>
     </ul>
-    <div class="pd-note">Cocok untuk event: bisa <b>grill</b> sekaligus <b>shabu</b> dalam 1 set alat.</div>
-    <div class="prod-cta">
-      <a class="primary" href="#" onclick="document.getElementById('qty-shabu')?.scrollIntoView({behavior:'smooth',block:'center'});return false;">➕ Tambah jumlah</a>
-      <a href="https://wa.me/6285771276910?text=Halo%20admin%2C%20mau%20tanya%20detail%20Sewa%20Shabu%20%26%20Grill%20Set" target="_blank" rel="noopener">💬 Tanya admin</a>
+    <div class="alat-qty">
+      <div class="qty-control">
+        <button class="qty-btn" onclick="changeQtyAlat('shabu',-1)">−</button>
+        <div class="qty-num" id="qty-shabu">0</div>
+        <button class="qty-btn" onclick="changeQtyAlat('shabu',1)">+</button>
+      </div>
     </div>
   </div>
-</details>
 </div>
-<div class="qty-control">
-<button class="qty-btn" onclick="changeQtyAlat('shabu',-1)">−</button>
-<div class="qty-num" id="qty-shabu">0</div>
-<button class="qty-btn" onclick="changeQtyAlat('shabu',1)">+</button>
-</div>
-</div>
-<div class="product-row" id="row-shabuonly">
-<div class="product-emoji">🥘</div>
-<div class="product-info">
-<div class="product-name">Shabu Only</div>
-<div class="product-desc">Sewa set shabu (tanpa grill)</div>
-<div class="product-price">Rp 60.000 / unit</div>
-<details class="prod-details">
-  <summary>ℹ️ Lihat detail</summary>
-  <div class="prod-detail-body">
-    <div class="pd-title">Komponen yang didapat</div>
-    <ul>
+<div class="product-row alat-card" id="row-shabuonly">
+  <div class="alat-top">
+    <div class="product-emoji">🥘</div>
+    <div class="product-info">
+      <div class="product-name">Shabu Only</div>
+      <div class="product-desc">Sewa set shabu (tanpa grill)</div>
+      <div class="product-price">Rp 60.000 / unit</div>
+    </div>
+    <div class="alat-badge">👥 3–6 orang/unit</div>
+  </div>
+  <div class="alat-body">
+    <div class="alat-title">Komponen yang didapat</div>
+    <ul class="alat-list">
       <li>Kompor portable + panci shabu</li>
       <li>Centong/ladle</li>
       <li>Gas 1 tabung</li>
       <li>Kuah tomyam (untuk shabu)</li>
       <li>4 set alat makan sekali pakai</li>
     </ul>
-    <div class="pd-note">Paket ini fokus untuk <b>shabu</b> saja (tanpa pan grill).</div>
-    <div class="prod-cta">
-      <a class="primary" href="#" onclick="document.getElementById('qty-shabuonly')?.scrollIntoView({behavior:'smooth',block:'center'});return false;">➕ Tambah jumlah</a>
-      <a href="https://wa.me/6285771276910?text=Halo%20admin%2C%20mau%20tanya%20detail%20Sewa%20Shabu%20Only" target="_blank" rel="noopener">💬 Tanya admin</a>
+    <div class="alat-qty">
+      <div class="qty-control">
+        <button class="qty-btn" onclick="changeQtyAlat('shabuonly',-1)">−</button>
+        <div class="qty-num" id="qty-shabuonly">0</div>
+        <button class="qty-btn" onclick="changeQtyAlat('shabuonly',1)">+</button>
+      </div>
     </div>
   </div>
-</details>
-</div>
-<div class="qty-control">
-<button class="qty-btn" onclick="changeQtyAlat('shabuonly',-1)">−</button>
-<div class="qty-num" id="qty-shabuonly">0</div>
-<button class="qty-btn" onclick="changeQtyAlat('shabuonly',1)">+</button>
-</div>
 </div>
 <div class="porsi-hint" id="porsiHint"></div>
 <div class="note-box secondary">📦 <strong>Butuh lebih dari 10 unit?</strong> Hubungi admin: <strong><a href="https://wa.me/6285771276910">085771276910</a><button class="copy-btn" data-copy-text="085771276910" type="button">Salin</button></strong></div>
 </div>
+
+<!-- MAPS (estimasi ongkir) -->
+<div class="sec-details always-open" style="margin-top:18px;">
+  <div class="sec-summary-static">📍 Cek lokasi &amp; estimasi ongkir</div>
+  <div class="map-note" style="font-size:12px;color:var(--text-muted);line-height:1.6;margin:10px 0 10px;">Map ini membantu kamu <b>estimasi ongkir ojek online</b> dari lokasi kami ke alamatmu, supaya total biaya tidak bikin kaget ya.</div>
+  <div class="map-section">
+    <div class="map-embed-wrap">
+      <iframe allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=Indopower%20International&amp;output=embed" title="Lokasi (Google Maps)"></iframe>
+      <div class="map-badge">📍 Indopower International · Jakarta Barat</div>
+    </div>
+    <button class="map-open-btn" onclick="window.open('https://maps.app.goo.gl/VbNtWJM1JckHNcWz6','_blank')">
+      🗺️ Buka di Google Maps ↗
+    </button>
+  </div>
+</div>
+
 </div>
 <!-- ══════════════════════════════════════
            SLIDE 2: BAHAN MAKANAN / ADD-ONS
@@ -1809,7 +1851,7 @@ textarea { min-height:80px; resize:vertical; }
 <div class="bahan-info">
 <div class="bahan-name">Sayur Basic</div>
 <div class="bahan-tagline">Selada + Bawang Bombay · Segar &amp; crunchy</div>
-<div class="bahan-price">Rp 20.000</div>
+<div class="bahan-price">Rp 15.000</div>
 </div>
 <div class="bahan-qty">
 <div class="qty-control">
@@ -2024,18 +2066,7 @@ textarea { min-height:80px; resize:vertical; }
 <textarea id="custNote" oninput="saveDraft()" placeholder="Misal: tidak pakai lemak banyak, minta kompor ekstra, dll..." style="margin-bottom:20px;"></textarea>
 <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text-muted);line-height:1.7;">Order dikonfirmasi admin setelah pesan diterima 🙏🔥</div>
 
-<!-- MAPS (dipindah ke paling bawah) -->
-<div class="sec-details always-open" style="margin-top:18px;">
-  <div class="sec-summary-static">📍 Lokasi Enjoy Grill</div>
-  <div class="map-section">
-    <div class="map-embed-wrap">
-      <iframe allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=Indopower%20International&amp;output=embed" title="Lokasi (Google Maps)"></iframe>
-      <div class="map-badge">📍 Indopower International · Jakarta Barat</div>
-    </div>
-    <button class="map-open-btn" onclick="window.open('https://maps.app.goo.gl/VbNtWJM1JckHNcWz6','_blank')">
-      🗺️ Buka di Google Maps ↗
-    </button>
-  </div>
+
 </div>
 </div>
 </div><!-- end slide-track -->
@@ -2590,12 +2621,25 @@ function renderPaketCards(){
   if (typeof updatePorsiUI === 'function') updatePorsiUI();
 }
 
+function removePaket(id){
+  const label = (paketData && paketData[id]) ? paketData[id].name : id;
+  paketQty[id] = 0;
+  renderPaketCards();
+  updateSteamLock();
+  updateSummary();
+  updateFloatingCart();
+  if (typeof updatePorsiUI === 'function') updatePorsiUI();
+  saveDraft();
+  showToast('🗑️ ' + label + ' dihapus');
+}
+
 function changePaketQty(id, delta){
   const cur = paketQty[id] || 0;
   // Validasi hapus: qty 1 lalu tap minus
   if(delta < 0 && cur === 1){
     const label = (paketData && paketData[id]) ? paketData[id].name : id;
-    if(!confirmRemoveItem(label)) return;
+    confirmRemoveItem(label, ()=> removePaket(id));
+    return;
   }
   const next = Math.max(0, cur + delta);
   const max = paketMaxQty(id);
@@ -2846,8 +2890,40 @@ function ensureAlatRemoveUI(item){
   if(qc) qc.insertAdjacentElement('afterend', btn);
 }
 
-function confirmRemoveItem(label){
-  return window.confirm(`Hapus "${label}" dari keranjang?`);
+function openConfirmModal(message, onOk){
+  const modal = document.getElementById('confirmModal');
+  const body  = document.getElementById('confirmBody');
+  const okBtn = document.getElementById('confirmOk');
+  const ccBtn = document.getElementById('confirmCancel');
+  if(!modal || !body || !okBtn || !ccBtn){
+    // fallback aman
+    // fallback terakhir (harusnya tidak kepakai karena modal tersedia)
+    if(window.confirm(message)) onOk && onOk();
+    return;
+  }
+  body.textContent = message;
+  modal.classList.add('show');
+  modal.setAttribute('aria-hidden','false');
+
+  const cleanup = ()=>{
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden','true');
+    okBtn.onclick = null;
+    ccBtn.onclick = null;
+    modal.onclick = null;
+    window.removeEventListener('keydown', onKey);
+  };
+  const onKey = (e)=>{ if(e.key==='Escape') cleanup(); };
+  window.addEventListener('keydown', onKey);
+
+  okBtn.onclick = ()=>{ cleanup(); onOk && onOk(); };
+  ccBtn.onclick = ()=>{ cleanup(); };
+  modal.onclick = (e)=>{ if(e.target === modal) cleanup(); };
+}
+
+// kompat: nama lama, tapi sekarang non-blocking
+function confirmRemoveItem(label, onOk){
+  openConfirmModal(`Hapus \"${label}\" dari keranjang?`, onOk);
 }
 
 function alatLabel(item){
@@ -2859,7 +2935,8 @@ function changeQtyAlat(item, delta) {
   const cur = qtyAlat[item] || 0;
   // Validasi hapus: qty 1 lalu tap minus
   if(delta < 0 && cur === 1){
-    if(!confirmRemoveItem(alatLabel(item))) return;
+    confirmRemoveItem(alatLabel(item), ()=> removeAlat(item));
+    return;
   }
   const newVal = cur + delta;
   if (newVal < 0) return;
@@ -2893,7 +2970,7 @@ const pricesV = {
   saikoro:50000, steak_tenderloin:50000, steak_sirloin:50000,
   chicken_dada:30000, chicken_paha:30000,
   sosis_sapi:25000, sosis_ayam:25000, steam:50000,
-  sayur_basic:20000, sayur_komplit:25000, saus_bbq:15000, saus_bp:15000
+  sayur_basic:15000, sayur_komplit:25000, saus_bbq:15000, saus_bp:15000
 };
 const labelsV = {
   beef_lemak:'Beef Slice US (Lemak)', beef_nlemak:'Beef Slice US (Low Fat)', beef_lemak_aus:'Beef Yoshinoya AUS',
@@ -2934,7 +3011,8 @@ function changeQtyV(item, delta) {
   // Validasi hapus: qty 1 lalu tap minus
   if(delta < 0 && cur === 1){
     const label = (labelsV && labelsV[item]) ? labelsV[item] : item;
-    if(!confirmRemoveItem(label)) return;
+    confirmRemoveItem(label, ()=> removeV(item));
+    return;
   }
   const newVal = cur + delta;
   if (newVal < 0) return;
